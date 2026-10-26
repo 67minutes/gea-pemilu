@@ -105,6 +105,8 @@ EMAIL_PORT = int(os.getenv("EMAIL_PORT", "1025"))
 EMAIL_TIMEOUT = 10
 PASSWORD_RESET_TIMEOUT = 3600
 THROTTLE_ACCOUNT_LIMIT = int(os.getenv("THROTTLE_ACCOUNT_LIMIT", "10"))
+# Failed logins for one account across all addresses; bounds distributed guessing.
+THROTTLE_ACCOUNT_WIDE_LIMIT = int(os.getenv("THROTTLE_ACCOUNT_WIDE_LIMIT", "50"))
 # Campus users can share one public IP; account limits do the primary protection.
 THROTTLE_IP_LIMIT = int(os.getenv("THROTTLE_IP_LIMIT", "2000"))
 THROTTLE_WINDOW_SECONDS = 300

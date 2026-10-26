@@ -33,11 +33,6 @@ def consume_bucket(value, limit):
     return bucket.count <= limit
 
 
-def bucket_count(value):
-    bucket = ThrottleBucket.objects.filter(key=bucket_key(value), window=current_window()).first()
-    return bucket.count if bucket else 0
-
-
 def clear_bucket(value):
     ThrottleBucket.objects.filter(key=bucket_key(value)).delete()
 
@@ -54,8 +49,10 @@ def client_ip(request):
 
 
 class AuthenticationThrottleMiddleware:
-    # Logins count only failures, per account and client address, and a success clears them, so a
-    # stranger cannot lock a voter out. Password reset counts every request: it sends email.
+    # Every login attempt atomically reserves a failure slot before the view runs, both per account and
+    # client address (so a stranger elsewhere cannot lock a voter out) and per account across all
+    # addresses at a higher limit (so distributed guessing stays bounded). Only a verified login as that
+    # account refunds them. Password reset counts every request per email: it sends mail.
     login_paths = {"/login/", "/committee/admin/login/"}
     paths = login_paths | {"/password-reset/"}
 
@@ -73,15 +70,21 @@ class AuthenticationThrottleMiddleware:
             if not consume_bucket(f"account:{identity}", settings.THROTTLE_ACCOUNT_LIMIT):
                 return self.too_many()
             return self.get_response(request)
-        failures = f"failed:{identity}:{ip}"
-        if bucket_count(failures) >= settings.THROTTLE_ACCOUNT_LIMIT:
+        local, everywhere = f"failed:{identity}:{ip}", f"failed:{identity}"
+        if not consume_bucket(local, settings.THROTTLE_ACCOUNT_LIMIT):
             return self.too_many()
+        if not consume_bucket(everywhere, settings.THROTTLE_ACCOUNT_WIDE_LIMIT):
+            return self.too_many()
+        user_before = getattr(request, "user", None)
+        was_authenticated = bool(user_before and user_before.is_authenticated)
         response = self.get_response(request)
-        # Both login views redirect on success and re-render the form (200) on failure.
-        if response.status_code == 302:
-            clear_bucket(failures)
-        elif response.status_code == 200:
-            consume_bucket(failures, settings.THROTTLE_ACCOUNT_LIMIT)
+        user = getattr(request, "user", None)
+        # Refund only when this request itself logged in as the submitted account. A redirect alone
+        # proves nothing: LoginView also redirects sessions that were already authenticated.
+        if (not was_authenticated and user is not None and user.is_authenticated
+                and user.get_username().lower() == identity):
+            clear_bucket(local)
+            clear_bucket(everywhere)
         return response
 
     @staticmethod

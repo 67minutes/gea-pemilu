@@ -219,6 +219,27 @@ def test_successful_login_clears_failures(make_election, settings):
     assert Client().post(reverse("login"), wrong).status_code == 429
 
 
+def test_redirect_for_other_logged_in_session_does_not_clear_failures(make_election, settings):
+    _e, _o, _c, voters = make_election(voter_count=2)
+    settings.THROTTLE_ACCOUNT_LIMIT = 2
+    wrong = {"username": "12000001", "password": "wrong"}
+    assert Client().post(reverse("login"), wrong).status_code == 200
+    other = Client()
+    other.force_login(voters[1].user)
+    # LoginView redirects an already-authenticated session without checking the password.
+    assert other.post(reverse("login"), wrong).status_code == 302
+    assert Client().post(reverse("login"), wrong).status_code == 429
+
+
+def test_account_wide_limit_bounds_distributed_guessing(make_election, settings):
+    make_election()
+    settings.THROTTLE_ACCOUNT_WIDE_LIMIT = 3
+    wrong = {"username": "12000001", "password": "wrong"}
+    for index in range(3):
+        assert Client(REMOTE_ADDR=f"10.0.1.{index}").post(reverse("login"), wrong).status_code == 200
+    assert Client(REMOTE_ADDR="10.0.1.99").post(reverse("login"), wrong).status_code == 429
+
+
 def test_trusted_proxy_address_keys_the_ip_limit(make_election, settings):
     make_election()
     settings.THROTTLE_IP_LIMIT = 1
