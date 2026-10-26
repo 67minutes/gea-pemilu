@@ -23,6 +23,7 @@ from .services import (
     finalize_results,
     import_roster,
     parse_roster,
+    published_results,
     request_credentials,
     revoke_access,
     set_paused,
@@ -108,7 +109,7 @@ def receipt(request, receipt_id):
 @require_GET
 def results(request):
     election = Election.objects.first()
-    snapshot = finalize_results() if election else None
+    snapshot = published_results() if election else None
     return render(request, "elections/results.html", {"election": election, "snapshot": snapshot})
 
 

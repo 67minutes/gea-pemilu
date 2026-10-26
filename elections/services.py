@@ -97,6 +97,19 @@ def submit_vote(user, office_slug, candidate_id, request_id):
     return vote, True
 
 
+def published_results():
+    """Public, read-only view of the results. Takes the election lock only once, after closing,
+    to write the snapshot; every request before closing or after finalization is a plain read."""
+    election = Election.objects.filter(pk=1).first()
+    if not election or not election.activated_at:
+        return None
+    if election.result_snapshot is not None:
+        return election.result_snapshot
+    if database_now() < election.closes_at:
+        return None
+    return finalize_results()
+
+
 @transaction.atomic
 def finalize_results():
     election = lock_election()

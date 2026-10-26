@@ -103,6 +103,20 @@ def test_no_results_or_exports_before_close(client, make_election):
     assert client.get(reverse("export_results", args=["ballots"])).status_code == 302
 
 
+def test_public_results_do_not_lock_while_open(client, make_election):
+    make_election()
+    with patch("elections.services.lock_election", side_effect=AssertionError("locked")):
+        assert client.get(reverse("results")).status_code == 200
+
+
+def test_public_results_lock_once_after_close(client, make_election):
+    e, _o, _c, _v = make_election(closes_in=timedelta(seconds=-1))
+    assert client.get(reverse("results")).status_code == 200  # first request after close finalizes
+    assert Election.objects.get(pk=e.pk).result_snapshot is not None
+    with patch("elections.services.lock_election", side_effect=AssertionError("locked")):
+        assert "Kahim Candidate 1" in client.get(reverse("results")).content.decode()
+
+
 def test_finalization_is_stable_and_anonymous(client, make_election):
     e, _o, _c, _v = make_election(closes_in=timedelta(seconds=-1))
     snapshot = finalize_results()

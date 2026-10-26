@@ -30,6 +30,8 @@ Publishing requires a GitHub/GitLab/Bitbucket repository and a connected Render 
 The production check intentionally refuses SQLite, file/SMTP email, missing outbox encryption,
 an HTTP origin, an example sender, and standard Django deployment-check failures. `TRUST_PROXY=true`
 is for Render's controlled TLS proxy, never an arbitrary publicly exposed development server.
+With it, login throttling keys on the client address Render's proxy appends to `X-Forwarded-For`
+(`TRUSTED_PROXY_HOPS=1`). Raise the hop count only if another proxy or CDN is placed in front of Render.
 Database public networking is disabled by default. Use the Render shell or explicitly allow only
 your operator IP temporarily for backup/recovery; remove that access afterward.
 
