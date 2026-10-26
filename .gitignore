@@ -1,0 +1,15 @@
+.venv/
+.env
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.sqlite3
+staticfiles/
+output/
+*.log
+*.dump
+*.fernet
+*.archive
+loadtest/voters.json
+.playwright-cli/
