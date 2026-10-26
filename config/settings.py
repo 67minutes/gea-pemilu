@@ -85,7 +85,10 @@ SECURE_HSTS_PRELOAD = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = "same-origin"
 X_FRAME_OPTIONS = "DENY"
-if os.getenv("TRUST_PROXY", "false").lower() == "true":
+TRUST_PROXY = os.getenv("TRUST_PROXY", "false").lower() == "true"
+# Proxies in front of the app that append to X-Forwarded-For (Render's edge proxy is one).
+TRUSTED_PROXY_HOPS = max(1, int(os.getenv("TRUSTED_PROXY_HOPS", "1")))
+if TRUST_PROXY:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 DATA_UPLOAD_MAX_MEMORY_SIZE = 1_048_576
 FILE_UPLOAD_MAX_MEMORY_SIZE = 1_048_576

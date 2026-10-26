@@ -197,6 +197,54 @@ def test_throttle_is_shared_across_clients(make_election, settings):
     assert Client().post(reverse("login"), {"username": "12000001", "password": "wrong"}).status_code == 429
 
 
+def test_failed_logins_from_one_address_do_not_lock_out_the_voter(make_election, settings):
+    make_election()
+    settings.THROTTLE_ACCOUNT_LIMIT = 2
+    attacker = Client(REMOTE_ADDR="10.0.0.1")
+    for _attempt in range(2):
+        assert attacker.post(reverse("login"), {"username": "12000001", "password": "wrong"}).status_code == 200
+    assert attacker.post(reverse("login"), {"username": "12000001", "password": "wrong"}).status_code == 429
+    voter = Client(REMOTE_ADDR="10.0.0.2")
+    assert voter.post(reverse("login"), {"username": "12000001", "password": "Example-password-123!"}).status_code == 302
+
+
+def test_successful_login_clears_failures(make_election, settings):
+    make_election()
+    settings.THROTTLE_ACCOUNT_LIMIT = 2
+    wrong = {"username": "12000001", "password": "wrong"}
+    assert Client().post(reverse("login"), wrong).status_code == 200
+    assert Client().post(reverse("login"), {"username": "12000001", "password": "Example-password-123!"}).status_code == 302
+    for _attempt in range(2):
+        assert Client().post(reverse("login"), wrong).status_code == 200
+    assert Client().post(reverse("login"), wrong).status_code == 429
+
+
+def test_trusted_proxy_address_keys_the_ip_limit(make_election, settings):
+    make_election()
+    settings.THROTTLE_IP_LIMIT = 1
+    settings.TRUST_PROXY = True
+    settings.TRUSTED_PROXY_HOPS = 1
+    wrong = {"username": "12000001", "password": "wrong"}
+    proxy = "203.0.113.9"  # every request reaches the app from the same proxy address
+
+    def post(forwarded):
+        return Client(REMOTE_ADDR=proxy, HTTP_X_FORWARDED_FOR=forwarded).post(reverse("login"), wrong).status_code
+
+    assert post("198.51.100.1") == 200
+    assert post("198.51.100.1") == 429
+    assert post("198.51.100.2") == 200  # another client behind the same proxy is unaffected
+    assert post("1.2.3.4, 198.51.100.1") == 429  # a client-supplied left entry cannot dodge the limit
+
+
+def test_forwarded_header_ignored_without_trusted_proxy(make_election, settings):
+    make_election()
+    settings.THROTTLE_IP_LIMIT = 1
+    settings.TRUST_PROXY = False
+    wrong = {"username": "12000001", "password": "wrong"}
+    assert Client(HTTP_X_FORWARDED_FOR="198.51.100.1").post(reverse("login"), wrong).status_code == 200
+    assert Client(HTTP_X_FORWARDED_FOR="198.51.100.2").post(reverse("login"), wrong).status_code == 429
+
+
 def test_csrf_required_for_votes(make_election):
     _e, _o, c, v = make_election()
     client = Client(enforce_csrf_checks=True)
