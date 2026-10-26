@@ -1,0 +1,24 @@
+{% extends 'base.html' %}{% load i18n %}
+{% block title %}{% translate "Import voter CSV" %}{% endblock %}
+{% block content %}
+<div class="wrap page">
+  <a class="back" href="{% url 'committee' %}"><span aria-hidden="true">←</span> {% translate "Committee" %}</a>
+  <header class="page-head">
+    <h1 class="title">{% translate "Import voter CSV" %}</h1>
+    <p class="quiet">{% translate "Required columns: nim,email. Optional column: display_name. Review the list before confirming." %}</p>
+  </header>
+  {% if rows %}
+    <p class="eyebrow">{{ rows|length }} {% translate "voters ready to import" %}</p>
+    <div class="table-scroll"><table><thead><tr><th>NIM</th><th>Email</th><th>{% translate "Name" %}</th></tr></thead><tbody>
+    {% for row in rows %}<tr><td class="mono">{{ row.nim }}</td><td>{{ row.email }}</td><td>{{ row.display_name }}</td></tr>{% endfor %}
+    </tbody></table></div>
+    <form method="post" class="gap-top">{% csrf_token %}<button class="btn btn-solid" name="action" value="confirm">{% translate "Confirm import" %}</button></form>
+  {% else %}
+    <form method="post" enctype="multipart/form-data" class="narrow-form">{% csrf_token %}
+      {% if form.non_field_errors %}<div class="alert" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+      {% include 'partials/fields.html' %}
+      <button class="btn btn-solid" name="action" value="preview">{% translate "Preview CSV" %}</button>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

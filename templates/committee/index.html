@@ -1,0 +1,82 @@
+{% extends 'base.html' %}{% load i18n %}
+{% block title %}{% translate "Committee" %}{% endblock %}
+{% block content %}
+<div class="wrap page">
+  <header class="page-head split-head">
+    <div>
+      <p class="eyebrow">{% translate "Committee" %} · {{ user.username }}</p>
+      <h1 class="title">{% translate "Election operations" %}</h1>
+    </div>
+    <nav class="links" aria-label="{% translate 'Committee' %}">
+      <a class="textlink" href="{% url 'committee_admin:index' %}">{% translate "Election configuration" %}</a>
+      {% if can_operate %}<a class="textlink" href="{% url 'roster_import' %}">{% translate "Import voter CSV" %}</a>{% endif %}
+    </nav>
+  </header>
+
+  {% if election %}
+    {% include 'elections/schedule.html' %}
+    <div class="stats">
+      <p class="stat"><span>{% translate "eligible voters" %}</span><strong class="num">{{ eligible }}</strong></p>
+      {% for entry in turnout %}<p class="stat"><span>{{ entry.office }} · {% translate "submitted" %}</span><strong class="num">{{ entry.votes }}</strong></p>{% endfor %}
+    </div>
+    {% if can_operate %}
+    <form method="post" action="{% url 'committee_action' %}" class="actions" id="operate">{% csrf_token %}
+      {% if not election.activated_at %}<button class="btn btn-solid" name="action" value="activate" data-confirm="confirm-activate">{% translate "Activate and freeze configuration" %}</button>
+      {% elif election.state != 'closed' %}<button class="btn btn-solid" name="action" value="credentials" data-confirm="confirm-credentials">{% translate "Queue unsent credentials" %}</button>
+        {% if election.paused %}<button class="btn" name="action" value="resume">{% translate "Resume voting" %}</button>{% else %}<button class="btn" name="action" value="pause">{% translate "Pause voting" %}</button>{% endif %}
+      {% endif %}
+    </form>
+    {% endif %}
+    {% if election.state == 'closed' %}
+    <div class="links gap-top">
+      <a class="textlink" href="{% url 'export_results' 'aggregate' %}">{% translate "Export results" %}</a>
+      {% if can_operate %}<a class="textlink" href="{% url 'export_results' 'audit' %}">{% translate "Export audit log" %}</a>{% endif %}
+      {% if can_review %}<a class="textlink" href="{% url 'export_results' 'ballots' %}">{% translate "Export identity-linked ballots" %}</a>{% endif %}
+    </div>
+    {% endif %}
+  {% else %}<p class="note">{% translate "Create the election and candidates in configuration first." %}</p>
+    <a class="btn btn-solid gap-top" href="{% url 'committee_admin:index' %}">{% translate "Election configuration" %}</a>{% endif %}
+
+  <section class="panel">
+    <h2 class="section-title">{% translate "Email delivery" %}</h2>
+    <p class="fine">{% translate "Sent means accepted by the provider; check delivery and bounce events separately." %}</p>
+    <ul class="kv">{% for delivery in deliveries %}<li>{{ delivery.status_label }} <strong>{{ delivery.count }}</strong></li>{% empty %}<li>{% translate "No deliveries queued." %}</li>{% endfor %}</ul>
+    {% if failed_deliveries %}
+    <div class="table-scroll"><table><thead><tr><th>NIM</th><th>{% translate "Status" %}</th><th>{% translate "Attempts" %}</th></tr></thead><tbody>
+    {% for delivery in failed_deliveries %}<tr><td class="mono">{{ delivery.user.username }}</td><td>{{ delivery.last_error }}</td><td>{{ delivery.attempts }}</td></tr>{% endfor %}
+    </tbody></table></div>
+    {% endif %}
+    <p class="gap-top"><a class="textlink" href="{% url 'committee_admin:elections_emaildelivery_changelist' %}">{% translate "View delivery records" %}</a></p>
+  </section>
+
+  {% if can_operate %}
+  <section class="panel">
+    <h2 class="section-title">{% translate "Voter access" %}</h2>
+    <p class="fine">{% translate "Revoking access prevents future submissions and preserves existing votes." %}</p>
+    <details><summary>{% translate "Manage voter access" %}</summary>
+      <div class="table-scroll"><table><thead><tr><th>NIM</th><th>Email</th><th>{% translate "Access" %}</th></tr></thead><tbody>
+      {% for voter in voters %}<tr><td class="mono">{{ voter.user.username }}</td><td>{{ voter.user.email }}</td><td>{% if voter.user.is_active %}<form method="post" action="{% url 'committee_action' %}" id="revoke-{{ voter.pk }}">{% csrf_token %}<input type="hidden" name="voter_id" value="{{ voter.pk }}"><button class="btn btn-small" name="action" value="revoke" data-confirm="confirm-revoke" data-nim="{{ voter.user.username }}">{% translate "Revoke access" %}</button></form>{% else %}{% translate "Revoked" %}{% endif %}</td></tr>{% endfor %}
+      </tbody></table></div>
+    </details>
+  </section>
+  {% endif %}
+</div>
+
+{% if can_operate %}
+<dialog class="confirm" id="confirm-activate" role="alertdialog" aria-labelledby="confirm-activate-title" aria-describedby="confirm-activate-desc">
+  <h2 id="confirm-activate-title">{% translate "Activate and freeze configuration" %}</h2>
+  <p id="confirm-activate-desc">{% translate "This freezes the voter list, candidates, and schedule. It cannot be undone." %}</p>
+  <div class="actions"><button class="btn" type="button" data-confirm-cancel>{% translate "Cancel" %}</button><button class="btn btn-final" type="submit" data-confirm-submit>{% translate "Activate and freeze configuration" %}</button></div>
+</dialog>
+<dialog class="confirm" id="confirm-credentials" role="alertdialog" aria-labelledby="confirm-credentials-title" aria-describedby="confirm-credentials-desc">
+  <h2 id="confirm-credentials-title">{% translate "Queue unsent credentials" %}</h2>
+  <p id="confirm-credentials-desc">{% translate "Credential emails go to every voter who has not received them. This cannot be undone." %}</p>
+  <div class="actions"><button class="btn" type="button" data-confirm-cancel>{% translate "Cancel" %}</button><button class="btn btn-final" type="submit" data-confirm-submit>{% translate "Queue unsent credentials" %}</button></div>
+</dialog>
+<dialog class="confirm" id="confirm-revoke" role="alertdialog" aria-labelledby="confirm-revoke-title" aria-describedby="confirm-revoke-desc">
+  <h2 id="confirm-revoke-title">{% translate "Revoke access" %} · <span class="mono" data-confirm-copy="nim"></span></h2>
+  <p id="confirm-revoke-desc">{% translate "Revoking access prevents future submissions and preserves existing votes." %}</p>
+  <div class="actions"><button class="btn" type="button" data-confirm-cancel>{% translate "Cancel" %}</button><button class="btn btn-final" type="submit" data-confirm-submit>{% translate "Revoke access" %}</button></div>
+</dialog>
+{% endif %}
+{% endblock %}

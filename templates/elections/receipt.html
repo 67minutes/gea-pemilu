@@ -1,0 +1,23 @@
+{% extends 'base.html' %}{% load i18n %}
+{% block title %}{% translate "Vote received" %}{% endblock %}
+{% block content %}
+<div class="wrap page receipt-page">
+  <div class="seal" data-scene="seal" data-mark="{{ vote.office.get_slug_display|first }}" aria-hidden="true"></div>
+  <p class="eyebrow">{% translate "Submitted successfully" %}</p>
+  <h1 class="title">{% translate "Vote received" %}</h1>
+  <dl class="ledger">
+    <dt>{% translate "Office" %}</dt><dd>{{ vote.office }}</dd>
+    <dt>{% translate "Candidate" %}</dt><dd>{{ vote.candidate.number|stringformat:"02d" }} · {{ vote.candidate.name }}</dd>
+    <dt>{% translate "Submitted at" %}</dt><dd class="mono">{{ vote.submitted_at|date:"d M Y, H:i:s" }} WIB</dd>
+    <dt>{% translate "Receipt ID" %}</dt><dd class="mono">{{ vote.receipt_id }}</dd>
+  </dl>
+  <p class="fine">{% translate "This receipt confirms your saved vote. Keep it private." %}</p>
+  {% for office in remaining %}
+  <div class="pending">
+    <p>{% translate "You still have an unsubmitted office:" %} <strong>{{ office }}</strong></p>
+    <a class="btn btn-solid" href="{% url 'ballot' office.slug %}">{% translate "Choose candidate" %} <span class="arrow" aria-hidden="true">→</span></a>
+  </div>
+  {% endfor %}
+  <a class="textlink" href="{% url 'dashboard' %}">{% translate "Return to my ballot" %}</a>
+</div>
+{% endblock %}

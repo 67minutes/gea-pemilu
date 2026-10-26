@@ -1,0 +1,26 @@
+{% extends 'base.html' %}{% load i18n %}
+{% block title %}{% translate "Confirm your choice" %}{% endblock %}
+{% block content %}
+<div class="wrap page">
+  <header class="page-head">
+    <p class="eyebrow">{{ office }}</p>
+    <h1 class="title">{% translate "Confirm your choice" %}</h1>
+  </header>
+  <section class="verdict">
+    <span class="portrait" aria-hidden="true"></span>
+    <div>
+      <span class="num" aria-hidden="true">{{ candidate.number|stringformat:"02d" }}</span>
+      <h2 class="verdict-name"><span class="sr-only">{{ candidate.number }}. </span>{{ candidate.name }}</h2>
+    </div>
+  </section>
+  <div class="final"><strong>{% translate "This vote is final." %}</strong><p>{% translate "After submitting, you cannot change or delete this choice." %}</p></div>
+  <form method="post" action="{% url 'ballot' office.slug %}">{% csrf_token %}
+    <input type="hidden" name="candidate" value="{{ candidate.pk }}">{{ form.request_id }}
+    <div class="actions">
+      <button class="btn btn-final" type="submit" name="action" value="submit">{% translate "Confirm and submit vote" %}</button>
+      <a class="textlink" href="{% url 'ballot' office.slug %}">{% translate "Change selection" %}</a>
+    </div>
+  </form>
+  <p class="fine privacy">{{ privacy_notice }}</p>
+</div>
+{% endblock %}
