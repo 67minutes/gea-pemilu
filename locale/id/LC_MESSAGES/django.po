@@ -1,0 +1,510 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: gea-pemilu 0.1\n"
+"Language: id\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "Election"
+msgstr "Pemilu"
+
+msgid "Elections"
+msgstr "Pemilu"
+
+msgid "Opens at"
+msgstr "Waktu pembukaan"
+
+msgid "Closes at"
+msgstr "Waktu penutupan"
+
+msgid "Offices"
+msgstr "Jabatan"
+
+msgid "Candidates"
+msgstr "Kandidat"
+
+msgid "Candidate number"
+msgstr "Nomor urut kandidat"
+
+msgid "Profile (Indonesian)"
+msgstr "Profil (Bahasa Indonesia)"
+
+msgid "Profile (English)"
+msgstr "Profil (Bahasa Inggris)"
+
+msgid "Voter"
+msgstr "Pemilih"
+
+msgid "Voters"
+msgstr "Pemilih"
+
+msgid "Email deliveries"
+msgstr "Pengiriman email"
+
+msgid "Audit event"
+msgstr "Catatan audit"
+
+msgid "Audit events"
+msgstr "Catatan audit"
+
+msgid "Pending"
+msgstr "Dalam antrean"
+
+msgid "Sent"
+msgstr "Terkirim"
+
+msgid "Failed / review required"
+msgstr "Gagal / perlu ditinjau"
+
+msgid "HMTG “GEA” ITB — Committee"
+msgstr "HMTG “GEA” ITB — Panitia"
+
+msgid "Authenticator device"
+msgstr "Perangkat autentikator"
+
+msgid "Authentication code"
+msgstr "Kode autentikasi"
+
+msgid "Skip to content"
+msgstr "Langsung ke konten"
+
+msgid "Main navigation"
+msgstr "Navigasi utama"
+
+msgid "Results"
+msgstr "Hasil"
+
+msgid "Committee"
+msgstr "Panitia"
+
+msgid "My ballot"
+msgstr "Surat suara saya"
+
+msgid "Log out"
+msgstr "Keluar"
+
+msgid "Language"
+msgstr "Bahasa"
+
+msgid "Apply"
+msgstr "Terapkan"
+
+msgid "All election times are in WIB (UTC+7)."
+msgstr "Seluruh waktu pemilu menggunakan WIB (UTC+7)."
+
+msgid "Committee access"
+msgstr "Akses panitia"
+
+msgid "Kahim & Senator"
+msgstr "Kahim & Senator"
+
+msgid "Two offices. One final choice for each."
+msgstr "Dua jabatan. Satu pilihan final untuk masing-masing."
+
+msgid "View results"
+msgstr "Lihat hasil"
+
+msgid "Open my ballot"
+msgstr "Buka surat suara saya"
+
+msgid "Voter login"
+msgstr "Masuk sebagai pemilih"
+
+msgid "The committee is preparing the election. Please check back later."
+msgstr "Panitia sedang menyiapkan pemilu. Silakan kembali nanti."
+
+msgid "How to vote"
+msgstr "Cara memilih"
+
+msgid "Log in with your NIM and the password sent to your approved ITB email."
+msgstr "Masuk menggunakan NIM dan password yang dikirim ke email ITB terdaftar Anda."
+
+msgid "Select a candidate, review your choice, and confirm for each office separately."
+msgstr "Pilih kandidat, periksa pilihan, lalu konfirmasikan setiap jabatan secara terpisah."
+
+msgid "Check your receipt. You can return to vote for your remaining office before closing."
+msgstr "Periksa bukti suara Anda. Anda dapat kembali memilih jabatan lainnya sebelum penutupan."
+
+msgid "Ballot privacy"
+msgstr "Privasi surat suara"
+
+msgid "Your choices are linked to your NIM. Authorized committee reviewers can review them after closing. Keep your password private. Each submitted vote is final."
+msgstr "Pilihan Anda terhubung dengan NIM. Peninjau panitia yang berwenang dapat meninjaunya setelah pemilu berakhir. Rahasiakan password Anda. Setiap suara yang dikirim bersifat final."
+
+msgid "Opens"
+msgstr "Dibuka"
+
+msgid "Closes"
+msgstr "Ditutup"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Voting open"
+msgstr "Pemungutan suara dibuka"
+
+msgid "Voting closed"
+msgstr "Pemungutan suara ditutup"
+
+msgid "Voting paused"
+msgstr "Pemungutan suara dijeda"
+
+msgid "Not open yet"
+msgstr "Belum dibuka"
+
+msgid "Submitted"
+msgstr "Sudah dikirim"
+
+msgid "Not submitted"
+msgstr "Belum dikirim"
+
+msgid "View receipt"
+msgstr "Lihat bukti suara"
+
+msgid "Choose candidate"
+msgstr "Pilih kandidat"
+
+msgid "Choose one candidate"
+msgstr "Pilih satu kandidat"
+
+msgid "Nothing is submitted until you confirm on the next screen."
+msgstr "Suara belum dikirim sebelum Anda mengonfirmasi di halaman berikutnya."
+
+msgid "Your choice"
+msgstr "Pilihan Anda"
+
+msgid "Review choice"
+msgstr "Periksa pilihan"
+
+msgid "Confirm your choice"
+msgstr "Konfirmasi pilihan Anda"
+
+msgid "This vote is final."
+msgstr "Suara ini bersifat final."
+
+msgid "After submitting, you cannot change or delete this choice."
+msgstr "Setelah dikirim, pilihan ini tidak dapat diubah atau dihapus."
+
+msgid "Confirm and submit vote"
+msgstr "Konfirmasi dan kirim suara"
+
+msgid "Change selection"
+msgstr "Ubah pilihan"
+
+msgid "Vote received"
+msgstr "Suara diterima"
+
+msgid "Submitted successfully"
+msgstr "Berhasil dikirim"
+
+msgid "Office"
+msgstr "Jabatan"
+
+msgid "Candidate"
+msgstr "Kandidat"
+
+msgid "Submitted at"
+msgstr "Waktu pengiriman"
+
+msgid "Receipt ID"
+msgstr "ID bukti suara"
+
+msgid "This receipt confirms your saved vote. Keep it private."
+msgstr "Bukti ini mengonfirmasi bahwa suara Anda tersimpan. Rahasiakan bukti ini."
+
+msgid "You still have an unsubmitted office:"
+msgstr "Anda masih memiliki jabatan yang belum dipilih:"
+
+msgid "Return to my ballot"
+msgstr "Kembali ke surat suara saya"
+
+msgid "Election results"
+msgstr "Hasil pemilu"
+
+msgid "Final totals after voting closed. Individual voter identities are not published."
+msgstr "Rekapitulasi final setelah pemilu berakhir. Identitas pemilih tidak dipublikasikan."
+
+msgid "eligible voters"
+msgstr "pemilih terdaftar"
+
+msgid "turnout"
+msgstr "partisipasi"
+
+msgid "Votes"
+msgstr "Suara"
+
+msgid "The totals are tied. The committee will apply the election rules."
+msgstr "Perolehan suara seri. Panitia akan menerapkan peraturan pemilu."
+
+msgid "Candidate totals will be available automatically after voting closes."
+msgstr "Perolehan suara kandidat akan tersedia otomatis setelah pemungutan suara ditutup."
+
+msgid "NIM"
+msgstr "NIM"
+
+msgid "Approved ITB email"
+msgstr "Email ITB terdaftar"
+
+msgid "CSV has unexpected extra columns."
+msgstr "CSV memiliki kolom tambahan yang tidak sesuai."
+
+msgid "The CSV is malformed."
+msgstr "Format CSV tidak valid."
+
+msgid "Use your NIM and the password sent to your approved ITB email."
+msgstr "Gunakan NIM dan password yang dikirim ke email ITB terdaftar Anda."
+
+msgid "Log in"
+msgstr "Masuk"
+
+msgid "Forgot your password?"
+msgstr "Lupa password?"
+
+msgid "Reset password"
+msgstr "Pulihkan password"
+
+msgid "Enter your approved ITB email address. We will send a recovery link if it is eligible."
+msgstr "Masukkan email ITB terdaftar Anda. Kami akan mengirim tautan pemulihan jika alamat memenuhi syarat."
+
+msgid "Send recovery link"
+msgstr "Kirim tautan pemulihan"
+
+msgid "Check your email"
+msgstr "Periksa email Anda"
+
+msgid "If the address is eligible, a recovery link will arrive shortly. Check your spam folder too."
+msgstr "Jika alamat memenuhi syarat, tautan pemulihan akan segera dikirim. Periksa juga folder spam."
+
+msgid "Set a new password"
+msgstr "Buat password baru"
+
+msgid "Save password"
+msgstr "Simpan password"
+
+msgid "This recovery link is invalid or has expired."
+msgstr "Tautan pemulihan ini tidak valid atau sudah kedaluwarsa."
+
+msgid "Request another link"
+msgstr "Minta tautan baru"
+
+msgid "Password updated"
+msgstr "Password diperbarui"
+
+msgid "Your submitted votes are unchanged. Log in with your new password."
+msgstr "Suara yang telah dikirim tidak berubah. Masuk menggunakan password baru Anda."
+
+msgid "Election operations"
+msgstr "Operasional pemilu"
+
+msgid "Election configuration"
+msgstr "Konfigurasi pemilu"
+
+msgid "Import voter CSV"
+msgstr "Impor CSV pemilih"
+
+msgid "Turnout"
+msgstr "Partisipasi"
+
+msgid "submitted"
+msgstr "suara terkirim"
+
+msgid "Activate and freeze configuration"
+msgstr "Aktifkan dan kunci konfigurasi"
+
+msgid "Queue unsent credentials"
+msgstr "Antrekan kredensial yang belum dibuat"
+
+msgid "Resume voting"
+msgstr "Lanjutkan pemungutan suara"
+
+msgid "Pause voting"
+msgstr "Jeda pemungutan suara"
+
+msgid "Export results"
+msgstr "Ekspor hasil"
+
+msgid "Export audit log"
+msgstr "Ekspor log audit"
+
+msgid "Export identity-linked ballots"
+msgstr "Ekspor surat suara beserta identitas"
+
+msgid "Create the election and candidates in configuration first."
+msgstr "Buat pemilu dan kandidat di halaman konfigurasi terlebih dahulu."
+
+msgid "Email delivery"
+msgstr "Pengiriman email"
+
+msgid "Sent means accepted by the provider; check delivery and bounce events separately."
+msgstr "Terkirim berarti diterima penyedia email; periksa status diterima atau ditolak secara terpisah."
+
+msgid "No deliveries queued."
+msgstr "Belum ada email dalam antrean."
+
+msgid "Attempts"
+msgstr "Percobaan"
+
+msgid "View delivery records"
+msgstr "Lihat catatan pengiriman"
+
+msgid "Voter access"
+msgstr "Akses pemilih"
+
+msgid "Revoking access prevents future submissions and preserves existing votes."
+msgstr "Pencabutan akses mencegah pengiriman suara baru dan tetap mempertahankan suara yang sudah tersimpan."
+
+msgid "Manage voter access"
+msgstr "Kelola akses pemilih"
+
+msgid "Access"
+msgstr "Akses"
+
+msgid "Revoke access"
+msgstr "Cabut akses"
+
+msgid "Revoked"
+msgstr "Dicabut"
+
+msgid "Approved voter CSV"
+msgstr "CSV daftar pemilih tetap"
+
+msgid "CSV must be smaller than 1 MB."
+msgstr "Ukuran CSV harus kurang dari 1 MB."
+
+msgid "Required columns: nim,email. Optional column: display_name. Review the list before confirming."
+msgstr "Kolom wajib: nim,email. Kolom opsional: display_name. Periksa daftar sebelum mengonfirmasi."
+
+msgid "voters ready to import"
+msgstr "pemilih siap diimpor"
+
+msgid "Name"
+msgstr "Nama"
+
+msgid "Confirm import"
+msgstr "Konfirmasi impor"
+
+msgid "Preview CSV"
+msgstr "Pratinjau CSV"
+
+msgid "Access unavailable"
+msgstr "Akses tidak tersedia"
+
+msgid "This action is not available to your account or at this stage of the election."
+msgstr "Tindakan ini tidak tersedia untuk akun Anda atau pada tahap pemilu ini."
+
+msgid "Return home"
+msgstr "Kembali ke beranda"
+
+msgid "Page not found"
+msgstr "Halaman tidak ditemukan"
+
+msgid "Please try again"
+msgstr "Silakan coba lagi"
+
+msgid "We could not complete this request. Check your ballot status before retrying a submission."
+msgstr "Permintaan belum dapat diselesaikan. Periksa status surat suara sebelum mencoba mengirim kembali."
+
+msgid "The election is already activated."
+msgstr "Pemilu sudah diaktifkan."
+
+msgid "Set a future opening time before activating."
+msgstr "Atur waktu pembukaan di masa mendatang sebelum mengaktifkan."
+
+msgid "Configure both offices before activating."
+msgstr "Siapkan kedua jabatan sebelum mengaktifkan."
+
+msgid "Each office must have exactly two candidates."
+msgstr "Setiap jabatan harus memiliki tepat dua kandidat."
+
+msgid "Import the approved voter list first."
+msgstr "Impor daftar pemilih tetap terlebih dahulu."
+
+msgid "Only an activated, unfinished election can be paused or resumed."
+msgstr "Hanya pemilu aktif yang belum berakhir yang dapat dijeda atau dilanjutkan."
+
+msgid "You are not eligible to vote."
+msgstr "Anda tidak memenuhi syarat sebagai pemilih."
+
+msgid "Invalid office."
+msgstr "Jabatan tidak valid."
+
+msgid "Voting is not open."
+msgstr "Pemungutan suara sedang tidak dibuka."
+
+msgid "Invalid candidate for this office."
+msgstr "Kandidat tidak valid untuk jabatan ini."
+
+msgid "Upload a UTF-8 CSV file."
+msgstr "Unggah berkas CSV dengan format UTF-8."
+
+msgid "CSV must contain nim and email columns."
+msgstr "CSV harus memiliki kolom nim dan email."
+
+msgid "CSV exceeds 10,000 voters."
+msgstr "CSV melebihi batas 10.000 pemilih."
+
+#, python-format
+msgid "Invalid NIM or display name on CSV line %(line)s."
+msgstr "NIM atau nama tidak valid pada baris CSV %(line)s."
+
+#, python-format
+msgid "Invalid email on CSV line %(line)s."
+msgstr "Email tidak valid pada baris CSV %(line)s."
+
+msgid "Email domain is not an approved ITB domain."
+msgstr "Domain email bukan domain ITB yang diizinkan."
+
+msgid "Duplicate NIM or email in the CSV."
+msgstr "Ada NIM atau email duplikat dalam CSV."
+
+msgid "The CSV is empty."
+msgstr "CSV kosong."
+
+msgid "A NIM or email already exists. Import only new voters."
+msgstr "NIM atau email sudah terdaftar. Impor hanya pemilih baru."
+
+msgid "The activated voter list is frozen."
+msgstr "Daftar pemilih yang sudah diaktifkan telah dikunci."
+
+msgid "Activate the election before issuing credentials."
+msgstr "Aktifkan pemilu sebelum membuat kredensial."
+
+msgid "Too many attempts. Try again in five minutes."
+msgstr "Terlalu banyak percobaan. Coba lagi dalam lima menit."
+
+msgid "Preview the CSV again before importing."
+msgstr "Pratinjau CSV kembali sebelum mengimpor."
+
+#, python-format
+msgid "Imported %(count)s voters."
+msgstr "Berhasil mengimpor %(count)s pemilih."
+
+#, python-format
+msgid "Queued %(count)s credential emails."
+msgstr "Sebanyak %(count)s email kredensial masuk antrean."
+
+msgid "Credential generation is queued. Check delivery status shortly."
+msgstr "Pembuatan kredensial masuk antrean. Periksa status pengiriman sesaat lagi."
+
+msgid "Invalid voter."
+msgstr "Pemilih tidak valid."
+
+msgid "Exports are available after closing."
+msgstr "Ekspor tersedia setelah pemilu berakhir."
+
+msgid "Closes in"
+msgstr "Ditutup dalam"
+
+msgid "Opens in"
+msgstr "Dibuka dalam"
+
+msgid "Cancel"
+msgstr "Batal"
+
+msgid "This freezes the voter list, candidates, and schedule. It cannot be undone."
+msgstr "Ini mengunci daftar pemilih, kandidat, dan jadwal. Tindakan ini tidak dapat dibatalkan."
+
+msgid "Credential emails go to every voter who has not received them. This cannot be undone."
+msgstr "Email kredensial dikirim ke setiap pemilih yang belum menerimanya. Tindakan ini tidak dapat dibatalkan."

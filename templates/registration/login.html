@@ -1,0 +1,20 @@
+{% extends 'base.html' %}{% load i18n %}
+{% block title %}{% translate "Voter login" %}{% endblock %}
+{% block content %}
+<div class="split">
+  <div class="split-art" aria-hidden="true"><div data-scene="arena" data-state="idle"></div></div>
+  <div class="split-form">
+    <p class="eyebrow">HMTG “GEA” ITB</p>
+    <h1 class="title">{% translate "Voter login" %}</h1>
+    <p class="quiet gap">{% translate "Use your NIM and the password sent to your approved ITB email." %}</p>
+    <form method="post">{% csrf_token %}
+      {% if form.non_field_errors %}<div class="alert" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+      {% include 'partials/fields.html' %}
+      <input type="hidden" name="next" value="{{ next }}">
+      <button class="btn btn-solid btn-block" type="submit">{% translate "Log in" %}</button>
+    </form>
+    <div class="form-foot"><a class="textlink" href="{% url 'password_reset' %}">{% translate "Forgot your password?" %}</a></div>
+    <p class="fine">{{ privacy_notice }}</p>
+  </div>
+</div>
+{% endblock %}

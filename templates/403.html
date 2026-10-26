@@ -1,0 +1,10 @@
+{% extends 'base.html' %}{% load i18n %}
+{% block title %}{% translate "Access unavailable" %}{% endblock %}
+{% block content %}
+<div class="wrap card">
+  <p class="eyebrow">403</p>
+  <h1 class="title">{% translate "Access unavailable" %}</h1>
+  <p class="quiet gap">{% translate "This action is not available to your account or at this stage of the election." %}</p>
+  <a class="btn" href="/">{% translate "Return home" %}</a>
+</div>
+{% endblock %}

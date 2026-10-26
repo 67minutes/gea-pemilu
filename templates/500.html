@@ -1,0 +1,10 @@
+{% extends 'base.html' %}{% load i18n %}
+{% block title %}{% translate "Please try again" %}{% endblock %}
+{% block content %}
+<div class="wrap card">
+  <p class="eyebrow">500</p>
+  <h1 class="title">{% translate "Please try again" %}</h1>
+  <p class="quiet gap">{% translate "We could not complete this request. Check your ballot status before retrying a submission." %}</p>
+  <a class="btn" href="/dashboard/">{% translate "My ballot" %}</a>
+</div>
+{% endblock %}

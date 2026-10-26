@@ -1,0 +1,28 @@
+{% extends 'base.html' %}{% load i18n %}
+{% block title %}{{ office }}{% endblock %}
+{% block content %}
+<div class="wrap page">
+  <a class="back" href="{% url 'dashboard' %}"><span aria-hidden="true">←</span> {% translate "My ballot" %}</a>
+  <header class="page-head">
+    <p class="eyebrow">{{ office }}</p>
+    <h1 class="title">{% translate "Choose one candidate" %}</h1>
+    <p class="quiet">{% translate "Nothing is submitted until you confirm on the next screen." %}</p>
+  </header>
+  <form method="post">{% csrf_token %}{{ form.request_id }}
+    {% if form.non_field_errors or form.candidate.errors %}<div class="alert" role="alert" id="candidate-error">{{ form.non_field_errors }}{{ form.candidate.errors }}</div>{% endif %}
+    <fieldset class="tributes"{% if form.non_field_errors or form.candidate.errors %} aria-describedby="candidate-error"{% endif %}><legend class="sr-only">{% translate "Your choice" %}</legend>
+      {% for candidate in candidates %}
+      <label class="tribute" for="candidate-{{ candidate.pk }}">
+        <input class="sr-only" type="radio" id="candidate-{{ candidate.pk }}" name="candidate" value="{{ candidate.pk }}" required {% if form.candidate.value|stringformat:'s' == candidate.pk|stringformat:'s' %}checked{% endif %}>
+        <span class="portrait" aria-hidden="true"></span>
+        <span class="tribute-mark" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></span>
+        <span class="tribute-num num" aria-hidden="true">{{ candidate.number|stringformat:"02d" }}</span>
+        <strong class="tribute-name"><span class="sr-only">{{ candidate.number }}. </span>{{ candidate.name }}</strong>
+        <span class="tribute-profile">{{ candidate.profile|linebreaksbr }}</span>
+      </label>
+      {% endfor %}
+    </fieldset>
+    <div class="dock"><button class="btn btn-solid" type="submit" name="action" value="review">{% translate "Review choice" %} <span class="arrow" aria-hidden="true">→</span></button></div>
+  </form>
+</div>
+{% endblock %}

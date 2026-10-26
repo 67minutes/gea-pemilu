@@ -1,0 +1,49 @@
+{% extends 'base.html' %}{% load i18n %}
+{% block title %}{% translate "Results" %}{% endblock %}
+{% block content %}
+<div class="wrap page">
+  <header class="page-head">
+    <p class="eyebrow">HMTG “GEA” ITB</p>
+    <h1 class="title">{% translate "Election results" %}</h1>
+    {% if snapshot %}<p class="quiet">{% translate "Final totals after voting closed. Individual voter identities are not published." %}</p>{% endif %}
+  </header>
+  {% if snapshot %}
+  <div class="results-closed">
+    {% for office in snapshot.offices %}
+    <section>
+      <div class="result-head">
+        <h2 class="section-title">{{ office.slug|title }}</h2>
+        <p class="result-turnout"><span class="num">{{ office.turnout_percent }}%</span><span>{{ office.total }} / {{ snapshot.eligible }} {% translate "eligible voters" %}</span></p>
+      </div>
+      {% with a=office.candidates.0 b=office.candidates.1 %}
+      <ol class="result-rows">
+        {% for candidate in office.candidates %}
+        <li class="result-row{% if forloop.first and a.votes > b.votes %} is-lead{% elif forloop.last and b.votes > a.votes %} is-lead{% endif %}">
+          <span class="num" aria-hidden="true">{{ candidate.number|stringformat:"02d" }}</span>
+          <span class="result-name"><span class="sr-only">{{ candidate.number }}. </span>{{ candidate.name }}</span>
+          <span class="result-votes num">{{ candidate.votes }}<span class="sr-only"> {% translate "Votes" %}</span></span>
+          <span class="meter" aria-hidden="true"><i style="width:{% widthratio candidate.votes office.total 100 %}%"></i></span>
+        </li>
+        {% endfor %}
+      </ol>
+      {% endwith %}
+      {% if office.tie %}<p class="note gap-top">{% translate "The totals are tied. The committee will apply the election rules." %}</p>{% endif %}
+    </section>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="waiting">
+    <div class="waiting-art" aria-hidden="true" data-scene="arena"{% if election %} data-state="{{ election.state }}" data-opens="{{ election.opens_at|date:'c' }}" data-closes="{{ election.closes_at|date:'c' }}"{% endif %}></div>
+    <div>
+      <p class="quiet gap">{% translate "Candidate totals will be available automatically after voting closes." %}</p>
+      {% if election %}{% include 'elections/schedule.html' %}
+        {% if election.state == 'open' %}
+          {% if user.is_authenticated and not user.is_staff %}<a class="btn btn-solid gap-top" href="{% url 'dashboard' %}">{% translate "Open my ballot" %} <span class="arrow" aria-hidden="true">→</span></a>
+          {% elif not user.is_authenticated %}<a class="btn btn-solid gap-top" href="{% url 'login' %}">{% translate "Voter login" %} <span class="arrow" aria-hidden="true">→</span></a>{% endif %}
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

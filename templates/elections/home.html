@@ -1,0 +1,55 @@
+{% extends 'base.html' %}{% load i18n %}
+{% block content %}
+<section class="hero">
+  <div class="hero-art" data-scene="arena" aria-hidden="true"{% if election %} data-state="{{ election.state }}" data-opens="{{ election.opens_at|date:'c' }}" data-closes="{{ election.closes_at|date:'c' }}"{% endif %}></div>
+  <div class="wrap hero-copy">
+    {% if election.is_demo %}<p class="rehearsal" data-rehearsal="true">{{ election.name }}</p>{% endif %}
+    <p class="eyebrow">{% translate "Kahim & Senator" %}</p>
+    <h1 class="hero-title"><span class="hero-word">{% translate "Election" %}</span><span class="hero-org">HMTG “GEA” ITB</span></h1>
+    {% if election %}
+      {% include 'elections/schedule.html' %}
+      <div class="actions">
+      {% if election.state == 'closed' %}<a class="btn btn-solid" href="{% url 'results' %}">{% translate "View results" %} <span class="arrow" aria-hidden="true">→</span></a>
+      {% elif user.is_authenticated and not user.is_staff %}<a class="btn btn-solid" href="{% url 'dashboard' %}">{% translate "Open my ballot" %} <span class="arrow" aria-hidden="true">→</span></a>
+      {% else %}<a class="btn btn-solid" href="{% url 'login' %}">{% translate "Voter login" %} <span class="arrow" aria-hidden="true">→</span></a>{% endif %}
+      </div>
+    {% else %}<p class="note">{% translate "The committee is preparing the election. Please check back later." %}</p>{% endif %}
+  </div>
+</section>
+
+{% if election %}
+<section class="band" aria-labelledby="lineup-title">
+  <div class="wrap">
+    <div class="band-head"><h2 class="eyebrow" id="lineup-title">{% translate "Candidates" %}</h2></div>
+    <div class="lineup">
+      {% for office in election.offices.all %}
+      <div class="lineup-office">
+        <h3 class="section-title">{{ office }}</h3>
+        <ol>
+          {% for candidate in office.candidates.all %}
+          <li class="mini">
+            <span class="portrait" aria-hidden="true"></span>
+            <span class="num" aria-hidden="true">{{ candidate.number|stringformat:"02d" }}</span>
+            <span class="mini-name"><span class="sr-only">{{ candidate.number }}. </span>{{ candidate.name }}</span>
+          </li>
+          {% endfor %}
+        </ol>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<section class="band" aria-labelledby="how-title">
+  <div class="wrap">
+    <div class="band-head"><h2 class="eyebrow" id="how-title">{% translate "How to vote" %}</h2></div>
+    <ol class="steps">
+      <li><span class="num" aria-hidden="true">I</span>{% translate "Log in with your NIM and the password sent to your approved ITB email." %}</li>
+      <li><span class="num" aria-hidden="true">II</span>{% translate "Select a candidate, review your choice, and confirm for each office separately." %}</li>
+      <li><span class="num" aria-hidden="true">III</span>{% translate "Check your receipt. You can return to vote for your remaining office before closing." %}</li>
+    </ol>
+    <p class="fine privacy"><strong>{% translate "Ballot privacy" %}</strong>{{ privacy_notice }}</p>
+  </div>
+</section>
+{% endblock %}

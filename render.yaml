@@ -1,0 +1,96 @@
+# Replace launch inputs in Dashboard before enabling production traffic.
+# The shared secret group is generated once and used by both services.
+envVarGroups:
+  - name: gea-secrets
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: OUTBOX_KEY
+        generateValue: true
+services:
+  - type: web
+    name: gea-voting
+    runtime: docker
+    region: singapore
+    plan: 1c-2g
+    numInstances: 1
+    autoDeployTrigger: "off"
+    healthCheckPath: /health/ready/
+    preDeployCommand: python scripts/release.py
+    envVars:
+      - fromGroup: gea-secrets
+      - key: DATABASE_URL
+        fromDatabase:
+          name: gea-postgres
+          property: connectionPoolString
+      - key: DATABASE_MIGRATION_URL
+        fromDatabase:
+          name: gea-postgres
+          property: connectionString
+      - key: DEBUG
+        value: "false"
+      - key: TRUST_PROXY
+        value: "true"
+      - key: PUBLIC_BASE_URL
+        sync: false
+      - key: ALLOWED_HOSTS
+        sync: false
+      - key: CSRF_TRUSTED_ORIGINS
+        sync: false
+      - key: EMAIL_TRANSPORT
+        value: resend
+      - key: DEFAULT_FROM_EMAIL
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_WEBHOOK_SECRET
+        sync: false
+      - key: ITB_EMAIL_DOMAINS
+        sync: false
+      - key: WEB_WORKERS
+        value: "2"
+      - key: WEB_THREADS
+        value: "4"
+  - type: cron
+    name: gea-email-outbox
+    runtime: docker
+    region: singapore
+    plan: 0.5c-512mb
+    schedule: "* * * * *"
+    dockerCommand: python manage.py process_outbox --limit 50
+    autoDeployTrigger: "off"
+    envVars:
+      - fromGroup: gea-secrets
+      - key: DATABASE_URL
+        fromDatabase:
+          name: gea-postgres
+          property: connectionPoolString
+      - key: DEBUG
+        value: "false"
+      - key: PUBLIC_BASE_URL
+        fromService:
+          type: web
+          name: gea-voting
+          envVarKey: PUBLIC_BASE_URL
+      - key: EMAIL_TRANSPORT
+        value: resend
+      - key: DEFAULT_FROM_EMAIL
+        fromService:
+          type: web
+          name: gea-voting
+          envVarKey: DEFAULT_FROM_EMAIL
+      - key: RESEND_API_KEY
+        fromService:
+          type: web
+          name: gea-voting
+          envVarKey: RESEND_API_KEY
+databases:
+  - name: gea-postgres
+    region: singapore
+    plan: 0.5c-1g
+    postgresMajorVersion: "17"
+    databaseName: gea
+    user: gea
+    diskSizeGB: 1
+    connectionPool: pgbouncer
+    ipAllowList: []

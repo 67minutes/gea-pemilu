@@ -1,0 +1,29 @@
+{% extends 'base.html' %}{% load i18n %}
+{% block title %}{% translate "My ballot" %}{% endblock %}
+{% block content %}
+<div class="wrap page">
+  <header class="page-head split-head">
+    <div>
+      <p class="eyebrow">NIM {{ user.username }}</p>
+      <h1 class="title">{% translate "My ballot" %}</h1>
+    </div>
+    <p class="pips" aria-hidden="true">{% for entry in offices %}<i{% if entry.vote %} class="on"{% endif %}></i>{% endfor %}</p>
+  </header>
+  {% include 'elections/schedule.html' %}
+  <div class="offices">
+    {% for entry in offices %}
+    <article class="office{% if entry.vote %} is-sealed{% endif %}">
+      {% if entry.vote %}<svg class="sigil" viewBox="0 0 56 56" aria-hidden="true"><g fill="none" stroke="currentColor"><circle cx="28" cy="28" r="26"/><circle cx="28" cy="28" r="21" stroke-width=".6"/><path d="M28 2v6M28 48v6M2 28h6M48 28h6M9.6 9.6l4.2 4.2M42.2 42.2l4.2 4.2M9.6 46.4l4.2-4.2M42.2 13.8l4.2-4.2"/><path d="M20 28.5l5.5 5.5L37 22" stroke="#d98a2b" stroke-width="1.4"/></g></svg>{% endif %}
+      <span class="num" aria-hidden="true">{{ forloop.counter|stringformat:"02d" }}</span>
+      <h2 class="section-title">{{ entry.office }}</h2>
+      {% if entry.vote %}<p class="office-state">{% translate "Submitted" %} · {{ entry.vote.submitted_at|date:"d M, H:i" }}</p>
+      <div><a class="btn btn-small" href="{% url 'receipt' entry.vote.receipt_id %}">{% translate "View receipt" %}</a></div>
+      {% else %}<p class="office-state">{% translate "Not submitted" %}</p>
+      {% if election.state == 'open' %}<div><a class="btn btn-solid" href="{% url 'ballot' entry.office.slug %}">{% translate "Choose candidate" %} <span class="arrow" aria-hidden="true">→</span></a></div>{% endif %}
+      {% endif %}
+    </article>
+    {% endfor %}
+  </div>
+  <p class="fine privacy">{{ privacy_notice }}</p>
+</div>
+{% endblock %}

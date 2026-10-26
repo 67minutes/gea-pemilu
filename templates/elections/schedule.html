@@ -1,0 +1,13 @@
+{% load i18n tz %}
+<div class="status" data-state="{{ election.state }}">
+  <p class="status-cell"><span>{% translate "Status" %}</span><strong><i class="dot" aria-hidden="true"></i>
+    {% if election.state == 'open' %}{% translate "Voting open" %}{% elif election.state == 'closed' %}{% translate "Voting closed" %}{% elif election.state == 'paused' %}{% translate "Voting paused" %}{% else %}{% translate "Not open yet" %}{% endif %}
+  </strong></p>
+  <p class="status-cell"><span>{% translate "Opens" %}</span><strong>{{ election.opens_at|localtime|date:"d M Y, H:i" }}</strong></p>
+  <p class="status-cell"><span>{% translate "Closes" %}</span><strong>{{ election.closes_at|localtime|date:"d M Y, H:i" }}</strong></p>
+  {% if election.state == 'open' or election.state == 'paused' %}
+  <p class="status-cell"><span>{% translate "Closes in" %}</span><strong class="clock" data-countdown="{{ election.closes_at|date:'c' }}">{{ election.closes_at|timeuntil }}</strong></p>
+  {% elif election.state == 'scheduled' %}
+  <p class="status-cell"><span>{% translate "Opens in" %}</span><strong class="clock" data-countdown="{{ election.opens_at|date:'c' }}">{{ election.opens_at|timeuntil }}</strong></p>
+  {% endif %}
+</div>
