@@ -30,7 +30,6 @@ from .services import (
     submit_vote,
 )
 
-
 # Election committee (panitia), shown on the About page. Division titles are proper names, not translated.
 COMMITTEE_CHAIR = ("Ketua", "Wafda Agung Mulkinegara", "12024106")
 COMMITTEE = [
