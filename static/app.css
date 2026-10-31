@@ -61,20 +61,28 @@ p,li,dd{text-wrap:pretty}
 .voting-stage~main,.voting-stage~.foot{position:relative}
 
 /* One arena travels between pages: hero -> login panel -> voting backdrop (cross-document view transitions;
-   other browsers simply navigate). The new page's canvas may not be painted yet when it is captured, so the
-   old image carries the move and the live canvas fades in at the end. */
+   other browsers simply navigate). panem.js paints each arena before first render, so both ends are captured
+   and cross-fade as one body while the group carries the move. */
 @view-transition{navigation:auto}
 .hero-art,.split-art [data-scene],.voting-art{view-transition-name:arena}
 .bar{view-transition-name:bar}
+/* Voter pages lift their content into its own layer, painted after the arena, so the growing arena
+   passes behind the ballot during the move instead of snapping behind it at the end. */
+.voting-stage~main{view-transition-name:page}
+::view-transition-group(page){animation-duration:.45s}
 ::view-transition-old(root),::view-transition-new(root){animation-duration:.45s}
 ::view-transition-group(arena){animation-duration:1s;animation-timing-function:cubic-bezier(.65,0,.2,1)}
-::view-transition-old(arena){animation:arena-hold 1s both}
-::view-transition-new(arena){animation:arena-reveal 1s both}
-:root:has(.voting-stage)::view-transition-old(arena){animation-name:arena-hold-dim}
+/* Growing (into the backdrop): hand over early to the larger, sharper new image. */
+::view-transition-old(arena){animation:arena-out 1s both}
+::view-transition-new(arena){animation:arena-in 1s both}
+/* Shrinking (into the login panel): the big old image stays sharp, so let it carry most of the move. */
+:root:has(.split-art)::view-transition-old(arena){animation-name:arena-hold}
+:root:has(.split-art)::view-transition-new(arena){animation-name:arena-reveal}
 ::view-transition-old(arena):only-child{animation:arena-reveal .35s reverse both}
 ::view-transition-new(arena):only-child{animation:arena-reveal .6s both}
+@keyframes arena-out{0%{opacity:1}40%,to{opacity:0}}
+@keyframes arena-in{0%{opacity:0}40%,to{opacity:1}}
 @keyframes arena-hold{0%,75%{opacity:1}to{opacity:0}}
-@keyframes arena-hold-dim{0%{opacity:1}75%{opacity:.42}to{opacity:0}}
 @keyframes arena-reveal{0%,55%{opacity:0}to{opacity:1}}
 
 /* Shell */

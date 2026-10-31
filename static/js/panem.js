@@ -1,7 +1,7 @@
 /* Painted backgrounds (p5.js, instance mode), the countdown ticker, and confirmation dialogs.
    Scenes are decorative: hosts are aria-hidden and the page works without this file.
    Scenes paint once (noLoop) and redraw only on resize, font load, or a slow timer; the one
-   exception is the live home arena, which animates only while it is on screen. */
+   exception is the live arena (home hero, voter pages), which animates only while on screen. */
 (function () {
   "use strict";
 
@@ -17,6 +17,19 @@
     return function () { window.clearTimeout(timer); timer = window.setTimeout(fn, ms); };
   }
 
+  // While a cross-page view transition animates the captured image of this page,
+  // live scenes hold their first frame so the hand-off to the real canvas is seamless.
+  var settling = false, settleHooks = [];
+  window.addEventListener("pagereveal", function (event) {
+    if (!event.viewTransition) return;
+    settling = true;
+    settleHooks.forEach(function (fn) { fn(); });
+    event.viewTransition.finished.finally(function () {
+      settling = false;
+      settleHooks.forEach(function (fn) { fn(); });
+    });
+  });
+
   // Calls onChange(true|false) as the host enters or leaves the viewport.
   function watchVisibility(host, onChange) {
     if (!("IntersectionObserver" in window)) { onChange(true); return; }
@@ -26,7 +39,17 @@
   }
 
   function mount(host, sketch) {
-    new window.p5(function (p) { sketch(p, host); }, host);
+    var inst = new window.p5(function (p) { sketch(p, host); }, host);
+    // p5 holds setup until window "load". Start now so the first frame is painted
+    // before the browser captures this page for a cross-page view transition (the
+    // scripts are render-blocking). _startListener/_start are p5 1.11 internals.
+    if (inst._startListener) {
+      window.removeEventListener("load", inst._startListener, false);
+      inst._startListener = null;
+      inst._start();
+      // A looping sketch skips the frame _start draws (too soon after setup).
+      if (inst.frameCount === 0) inst.redraw();
+    }
     var canvas = host.querySelector("canvas");
     if (canvas) canvas.setAttribute("aria-hidden", "true");
   }
@@ -316,7 +339,7 @@
     }
 
     function setRunning() {
-      if (onscreen && !document.hidden) p.loop();
+      if (onscreen && !document.hidden && !settling) p.loop();
       else p.noLoop();
     }
 
@@ -502,6 +525,7 @@
           setRunning();
         });
         document.addEventListener("visibilitychange", setRunning);
+        settleHooks.push(setRunning);
         watchPointer();
         return;
       }

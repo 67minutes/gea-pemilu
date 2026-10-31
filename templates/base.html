@@ -9,8 +9,8 @@
   <link rel="preload" href="{% static 'fonts/source-serif-4.woff2' %}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{% static 'app.css' %}">
   <link rel="icon" href="{% static 'img/logo-64.png' %}" type="image/png">
-  <script src="{% static 'vendor/p5.min.js' %}" defer></script>
-  <script src="{% static 'js/panem.js' %}" defer></script>
+  <script src="{% static 'vendor/p5.min.js' %}" defer blocking="render"></script>
+  <script src="{% static 'js/panem.js' %}" defer blocking="render"></script>
 </head>
 <body>
 <div class="backdrop" data-scene="embers" aria-hidden="true"></div>
