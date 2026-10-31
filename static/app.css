@@ -244,24 +244,33 @@ main{flex:1;display:flex;flex-direction:column;outline:none}
 .waiting-art{position:relative;width:100%;aspect-ratio:1}
 
 /* About */
-.chair{display:grid;grid-template-columns:minmax(10rem,15rem) 1fr;align-items:end;gap:var(--space-10);max-width:44rem;margin-bottom:var(--space-16);padding-bottom:var(--space-10);border-bottom:1px solid var(--line)}
-.chair .mini-name{font-size:var(--text-4xl);line-height:var(--leading-4xl)}
-.crew{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-10) var(--space-6);margin:0;padding:0;list-style:none}
-.role{display:block;margin-top:var(--space-4);font-size:var(--text-xs);line-height:var(--leading-xs);color:var(--gold);letter-spacing:.04em;text-transform:uppercase}
-.nim{display:block;margin-top:var(--space-1);font-size:var(--text-sm);line-height:var(--leading-sm);color:var(--dust);font-variant-numeric:lining-nums tabular-nums}
+.crew{display:grid;grid-template-columns:repeat(auto-fill,minmax(9rem,1fr));gap:var(--space-4);margin:0;padding:0;list-style:none}
+.member{display:flex;flex-direction:column;border:1px solid var(--line);background:var(--coal)}
+.member .portrait{aspect-ratio:1;background-size:70%}
+.member-text{display:flex;flex-direction:column;gap:var(--space-1);padding:var(--space-3) var(--space-4) var(--space-4)}
+.member-name{font-family:var(--display);font-weight:500;font-size:var(--text-lg);line-height:1.25}
+@media (min-width:1100px){.crew{grid-template-columns:repeat(7,1fr)}}
+.role{font-size:var(--text-xs);line-height:var(--leading-xs);color:var(--gold);letter-spacing:.04em;text-transform:uppercase}
+.nim{font-size:var(--text-sm);line-height:var(--leading-sm);color:var(--dust);font-variant-numeric:lining-nums tabular-nums}
+.member.is-chair{grid-column:1/-1;flex-direction:row;align-items:center;border-color:var(--line-strong)}
+.member.is-chair .portrait{width:9rem;flex:none}
+.member.is-chair .member-text{padding:var(--space-4) var(--space-6)}
+.member.is-chair .member-name{font-size:var(--text-3xl);line-height:var(--leading-3xl)}
 
 /* Helpdesk */
-.help-grid{display:grid;grid-template-columns:minmax(14rem,22rem) 1fr;align-items:start;gap:var(--space-16)}
+.contact{display:grid;grid-template-columns:13rem 1fr;align-items:center;gap:var(--space-8);max-width:48rem;padding:var(--space-6);border:1px solid var(--line-strong);background:var(--coal)}
 .qr{margin:0}
-.qr img{display:block;width:100%;height:auto;padding:var(--space-4);background:#fff}
-.qr figcaption{margin-top:var(--space-3);font-size:var(--text-sm);line-height:var(--leading-sm);color:var(--dust)}
-.contact{margin-bottom:var(--space-12);padding:var(--space-8);border:1px solid var(--line-strong);background:var(--coal)}
-.contact .mini-name{font-size:var(--text-3xl);line-height:var(--leading-3xl)}
-.contact .phone{display:block;margin:var(--space-2) 0 var(--space-6);font-size:var(--text-2xl);line-height:var(--leading-2xl);color:var(--bone);text-decoration:none}
-.faq{margin:0;padding:0;list-style:none}
-.faq li{padding:var(--space-5) 0;border-bottom:1px solid var(--line)}
-.faq li:first-child{border-top:1px solid var(--line)}
-.faq strong{display:block;margin-bottom:var(--space-1);font-family:var(--display);font-weight:500;font-size:var(--text-xl);line-height:var(--leading-xl)}
+.qr img{display:block;width:100%;height:auto;padding:var(--space-2);background:#fff}
+.qr figcaption{margin-top:var(--space-2);font-size:var(--text-xs);line-height:var(--leading-xs);color:var(--dust)}
+.contact .eyebrow{margin-bottom:var(--space-2)}
+.contact .nim{display:block}
+.contact .member-name{display:block;font-size:var(--text-3xl);line-height:var(--leading-3xl)}
+.contact .phone{display:inline-block;margin:var(--space-3) 0 var(--space-5);font-size:var(--text-2xl);line-height:var(--leading-2xl);color:var(--bone);text-decoration:none}
+.contact .actions{gap:var(--space-3)}
+.faq-title{margin:var(--space-16) 0 var(--space-6)}
+.faq{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);margin:0;padding:0;list-style:none}
+.faq li{padding:var(--space-5) var(--space-6);border:1px solid var(--line)}
+.faq strong{display:block;margin-bottom:var(--space-2);font-family:var(--display);font-weight:500;font-size:var(--text-xl);line-height:var(--leading-xl)}
 .faq p{margin:0;font-size:var(--text-sm);line-height:var(--leading-sm);color:var(--dust)}
 
 /* Login and small cards */
@@ -314,13 +323,11 @@ details[open] summary{margin-bottom:var(--space-3)}
   .waiting{grid-template-columns:1fr}
   .waiting-art{max-width:22rem;margin:0 auto}
   .lineup{gap:var(--space-12)}
-  .crew{grid-template-columns:repeat(3,1fr)}
-  .help-grid{grid-template-columns:1fr;gap:var(--space-10)}
-  .qr{max-width:18rem}
+  .faq{grid-template-columns:1fr}
 }
 @media (max-width:680px){
   .bar{flex-wrap:wrap;gap:0 var(--space-4);padding-bottom:var(--space-1)}
-  .nav{flex-wrap:wrap;gap:var(--space-4)}
+  .nav{flex-wrap:wrap;gap:0 var(--space-3)}
   .title{font-size:var(--text-4xl);line-height:var(--leading-4xl)}
   .hero-word{font-size:var(--text-7xl)}
   .page{padding-block:var(--space-10) var(--space-20)}
@@ -329,10 +336,15 @@ details[open] summary{margin-bottom:var(--space-3)}
   .status-cell+.status-cell{padding-left:0;border-left:0}
   .status-cell:nth-child(even){padding-left:var(--space-4);border-left:1px solid var(--line)}
   .lineup,.offices,.results-closed,.steps{grid-template-columns:1fr}
-  .crew{grid-template-columns:1fr 1fr;gap:var(--space-8) var(--space-4)}
-  .chair{grid-template-columns:8rem 1fr;gap:var(--space-5)}
-  .chair .mini-name{font-size:var(--text-2xl);line-height:var(--leading-2xl)}
-  .contact{padding:var(--space-6)}
+  .crew{grid-template-columns:1fr 1fr;gap:var(--space-3)}
+  .member-text{padding:var(--space-3)}
+  .member-name{font-size:var(--text-lg);line-height:1.25}
+  .member.is-chair .portrait{width:6.5rem}
+  .member.is-chair .member-text{padding:var(--space-3) var(--space-4)}
+  .member.is-chair .member-name{font-size:var(--text-2xl);line-height:var(--leading-2xl)}
+  .contact{grid-template-columns:1fr;gap:var(--space-5);padding:var(--space-5)}
+  .qr{max-width:13rem}
+  .faq-title{margin-top:var(--space-12)}
   .tributes{grid-template-columns:1fr;gap:var(--space-4)}
   .tribute{display:grid;grid-template-columns:6rem 1fr;grid-template-rows:auto auto 1fr;column-gap:var(--space-4);padding:var(--space-3) var(--space-3) var(--space-4)}
   .tribute .portrait{grid-row:1/span 3;height:auto;aspect-ratio:4/5;align-self:start}
