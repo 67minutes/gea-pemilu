@@ -32,9 +32,9 @@ class Command(BaseCommand):
         for slug in ["kahim", "senator"]:
             office = Office.objects.create(election=election, slug=slug)
             for n in [1, 2]:
-                Candidate.objects.create(office=office, number=n, name=f"Demo {slug.title()} {n}",
-                    profile_id="Profil contoh untuk pengujian. Bukan kandidat resmi.",
-                    profile_en="Example profile for testing. Not an official candidate.")
+                Candidate.objects.create(office=office, number=n, name=f"Calon {office} {n}",
+                    profile_id="Visi dan misi calon akan ditampilkan di sini.",
+                    profile_en="The candidate's vision and mission will appear here.")
         credentials = []
         for index in range(options["voters"]):
             nim = str(99000000 + index)

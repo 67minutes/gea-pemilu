@@ -1,10 +1,9 @@
 {% extends 'base.html' %}{% load i18n %}
 {% block content %}
-<section class="hero">
+<section class="hero"{% if election.is_demo %} data-rehearsal="true"{% endif %}>
   <div class="hero-art" data-scene="arena" aria-hidden="true"{% if election %} data-state="{{ election.state }}" data-opens="{{ election.opens_at|date:'c' }}" data-closes="{{ election.closes_at|date:'c' }}"{% endif %}></div>
   <div class="wrap hero-copy">
-    {% if election.is_demo %}<p class="rehearsal" data-rehearsal="true">{{ election.name }}</p>{% endif %}
-    <p class="eyebrow">{% translate "Kahim & Senator" %}</p>
+    <p class="eyebrow">{% translate "Ketua Himpunan & Senator" %}</p>
     <h1 class="hero-title"><span class="hero-word">{% translate "Election" %}</span><span class="hero-org">HMTG “GEA” ITB</span></h1>
     {% if election %}
       {% include 'elections/schedule.html' %}
@@ -34,6 +33,7 @@
           </li>
           {% endfor %}
         </ol>
+    <p class="assist gap-top">{% translate "Haven't received your login credentials?" %} <a class="textlink" href="{% url 'helpdesk' %}">{% translate "Contact us" %}</a></p>
       </div>
       {% endfor %}
     </div>
@@ -49,6 +49,7 @@
       <li><span class="num" aria-hidden="true">II</span>{% translate "Select a candidate, review your choice, and confirm for each office separately." %}</li>
       <li><span class="num" aria-hidden="true">III</span>{% translate "Check your receipt. You can return to vote for your remaining office before closing." %}</li>
     </ol>
+    <p class="assist gap-top">{% translate "Haven't received your login credentials?" %} <a class="textlink" href="{% url 'helpdesk' %}">{% translate "Contact us" %}</a></p>
     <p class="fine privacy"><strong>{% translate "Ballot privacy" %}</strong>{{ privacy_notice }}</p>
   </div>
 </section>

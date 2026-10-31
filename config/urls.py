@@ -15,6 +15,8 @@ urlpatterns = [
     path("vote/<slug:slug>/", views.ballot, name="ballot"),
     path("receipt/<uuid:receipt_id>/", views.receipt, name="receipt"),
     path("results/", views.results, name="results"),
+    path("about/", views.about, name="about"),
+    path("helpdesk/", views.helpdesk, name="helpdesk"),
     path("password-reset/", auth_views.PasswordResetView.as_view(form_class=ApprovedPasswordResetForm,
          email_template_name="registration/password_reset_email.txt"), name="password_reset"),
     path("password-reset/sent/", auth_views.PasswordResetDoneView.as_view(), name="password_reset_done"),

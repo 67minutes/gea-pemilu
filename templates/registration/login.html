@@ -14,6 +14,7 @@
       <button class="btn btn-solid btn-block" type="submit">{% translate "Log in" %}</button>
     </form>
     <div class="form-foot"><a class="textlink" href="{% url 'password_reset' %}">{% translate "Forgot your password?" %}</a></div>
+    <p class="assist">{% translate "Haven't received your login credentials?" %} <a class="textlink" href="{% url 'helpdesk' %}">{% translate "Contact us" %}</a></p>
     <p class="fine">{{ privacy_notice }}</p>
   </div>
 </div>

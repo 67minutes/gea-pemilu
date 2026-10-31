@@ -82,7 +82,7 @@ class Election(models.Model):
 
 class Office(models.Model):
     class Slug(models.TextChoices):
-        KAHIM = "kahim", "Kahim"
+        KAHIM = "kahim", "Ketua Himpunan"
         SENATOR = "senator", "Senator"
 
     election = models.ForeignKey(Election, on_delete=models.PROTECT, related_name="offices", verbose_name=_("Election"))

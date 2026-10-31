@@ -30,6 +30,26 @@ from .services import (
     submit_vote,
 )
 
+# Election committee (panitia), shown on the About page. Division titles are proper names, not translated.
+COMMITTEE_CHAIR = ("Ketua", "Wafda Agung Mulkinegara", "12024106")
+COMMITTEE = [
+    ("IT", "Sahara Nada Maheswari", "12024107"),
+    ("Pencalonan", "Fernanda Rheza Adiyasa", "12024048"),
+    ("Hearing", "Rayhan Pratama", "12024081"),
+    ("Uji Panelis dan Debat", "Abdallah Yazid Ma’ruf", "12024034"),
+    ("Pemungutan dan Rekapitulasi Suara", "Yedija Giovanni Wistoro", "12024068"),
+    ("Grafis", "Masarra Amarantine", "12024101"),
+    ("Videografi", "Muhammad Rafie Putra", "12024096"),
+    ("Dokumentasi", "Muhammad Iqbal", "12024089"),
+    ("Publikasi", "Theo Jonathan Prakarsa Ginting", "12024005"),
+    ("Pensuasanaan", "Muhammad Naufal", "12024059"),
+    ("Relasi", "Vira Hana Syifa", "12024018"),
+    ("Operasional", "Daniel Sitopu", "12024079"),
+    ("Sekretaris dan Bendahara", "Rayna Amelia", "12024097"),
+    ("Disiplin", "Muhammad Iqbal Rifa’i", "12024076"),
+]
+HELPDESK = {"name": "Sahara Nada Maheswari", "role": "IT", "phone": "0851-2804-7459", "e164": "6285128047459"}
+
 
 class VoterLoginView(LoginView):
     template_name = "registration/login.html"
@@ -110,7 +130,19 @@ def receipt(request, receipt_id):
 def results(request):
     election = Election.objects.first()
     snapshot = published_results() if election else None
-    return render(request, "elections/results.html", {"election": election, "snapshot": snapshot})
+    labels = dict(Office.Slug.choices)
+    offices = [{**office, "label": labels.get(office["slug"], office["slug"])} for office in snapshot["offices"]] if snapshot else []
+    return render(request, "elections/results.html", {"election": election, "snapshot": snapshot, "offices": offices})
+
+
+@require_GET
+def about(request):
+    return render(request, "elections/about.html", {"chair": COMMITTEE_CHAIR, "committee": COMMITTEE})
+
+
+@require_GET
+def helpdesk(request):
+    return render(request, "elections/helpdesk.html", {"contact": HELPDESK})
 
 
 @committee_required()
