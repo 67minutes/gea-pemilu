@@ -1,7 +1,9 @@
 {% extends 'base.html' %}{% load i18n %}
 {% block content %}
 <section class="hero"{% if election.is_demo %} data-rehearsal="true"{% endif %}>
-  <div class="hero-art" data-scene="arena" aria-hidden="true"{% if election %} data-state="{{ election.state }}" data-opens="{{ election.opens_at|date:'c' }}" data-closes="{{ election.closes_at|date:'c' }}"{% endif %}></div>
+  <div class="hero-stage" aria-hidden="true">
+    <div class="hero-art" data-scene="arena" data-live="true"{% if election %} data-state="{{ election.state }}" data-opens="{{ election.opens_at|date:'c' }}" data-closes="{{ election.closes_at|date:'c' }}"{% endif %}></div>
+  </div>
   <div class="wrap hero-copy">
     <p class="eyebrow">{% translate "Ketua Himpunan & Senator" %}</p>
     <h1 class="hero-title"><span class="hero-word">{% translate "Election" %}</span><span class="hero-org">HMTG “GEA” ITB</span></h1>

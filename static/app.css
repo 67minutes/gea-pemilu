@@ -149,9 +149,17 @@ main{flex:1;display:flex;flex-direction:column;outline:none}
 .portrait{display:block;aspect-ratio:4/5;background:var(--stone-600) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 150'%3E%3Ccircle cx='60' cy='58' r='23' fill='%2378716c'/%3E%3Cpath d='M12 150c0-36 21-55 48-55s48 19 48 55z' fill='%2378716c'/%3E%3C/svg%3E") center bottom/78% no-repeat}
 
 /* Home */
-.hero{position:relative;isolation:isolate;display:flex;align-items:center;min-height:calc(100dvh - var(--header));overflow:hidden}
-.hero-art{--size:min(106vmin,58rem);position:absolute;z-index:var(--z-backdrop);top:50%;right:calc(var(--size) * -.2);width:var(--size);aspect-ratio:1;transform:translateY(-50%)}
-.hero-copy{padding-block:var(--space-16)}
+.hero{position:relative;isolation:isolate;display:flex;align-items:flex-start;min-height:calc(100dvh - var(--header));overflow:hidden}
+.hero-stage{position:absolute;inset:0;z-index:var(--z-backdrop);overflow:hidden;perspective:1600px;perspective-origin:60% 20%;pointer-events:none;
+  -webkit-mask-image:linear-gradient(to right,rgb(0 0 0 / .45) 0,#000 45%),linear-gradient(to bottom,#000 75%,transparent);-webkit-mask-composite:source-in;
+  mask-image:linear-gradient(to right,rgb(0 0 0 / .45) 0,#000 45%),linear-gradient(to bottom,#000 75%,transparent);mask-composite:intersect}
+/* The live arena is a tilted plane; panem.js eases --lean-* toward the pointer. */
+.hero-art{--size:max(120vmin,100vw);position:absolute;left:60%;top:60%;width:var(--size);aspect-ratio:1;margin:calc(var(--size) / -2) 0 0 calc(var(--size) / -2);
+  transform:rotateX(calc(50deg + var(--lean-y,0deg))) rotateZ(var(--lean-x,0deg)) scale(1);animation:arena-rise 1.8s cubic-bezier(.2,.7,.2,1) backwards}
+.hero-art canvas{width:100%!important;height:100%!important}
+@keyframes arena-rise{from{opacity:0;transform:rotateX(80deg) rotateZ(-10deg) scale(.88)}}
+/* Copy hugs the left gutter (in line with the logo) rather than the centred .wrap. */
+.hero-copy{max-width:none;margin:0;padding-block:var(--space-12) var(--space-16)}
 .hero-copy>*{max-width:37.5rem}
 .hero-copy>.status{max-width:45rem;margin:var(--space-8) 0;background:var(--ink)}
 .hero-title{display:flex;flex-direction:column;margin:0 0 var(--space-6)}
@@ -314,7 +322,9 @@ details[open] summary{margin-bottom:var(--space-3)}
 /* Layout breakpoints */
 @media (max-width:860px){
   .hero{display:block;min-height:0}
-  .hero-art{position:relative;top:auto;right:auto;transform:none;width:110vw;max-width:none;margin:calc(-1 * var(--space-10)) 0 0 -5vw}
+  .hero-stage{position:relative;inset:auto;height:min(95vw,36rem);margin-top:calc(-1 * var(--space-6));
+    -webkit-mask-image:linear-gradient(to bottom,#000 70%,transparent);mask-image:linear-gradient(to bottom,#000 70%,transparent)}
+  .hero-art{--size:min(140vw,52rem);left:50%;top:52%}
   .hero-copy{position:relative;padding-block:0 var(--space-16)}
   .split{display:block;min-height:0}
   .split-art{height:80vw;border-right:0}
