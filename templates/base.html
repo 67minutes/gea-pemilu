@@ -14,6 +14,7 @@
 </head>
 <body>
 <div class="backdrop" data-scene="embers" aria-hidden="true"></div>
+{% block stage %}{% endblock %}
 <a class="skip" href="#main">{% translate "Skip to content" %}</a>
 {% with here=request.resolver_match.url_name %}
 <header class="bar">

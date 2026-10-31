@@ -1,5 +1,6 @@
 {% extends 'base.html' %}{% load i18n %}
 {% block title %}{% translate "My ballot" %}{% endblock %}
+{% block stage %}{% include 'elections/voting_stage.html' with e=election %}{% endblock %}
 {% block content %}
 <div class="wrap page">
   <header class="page-head split-head">

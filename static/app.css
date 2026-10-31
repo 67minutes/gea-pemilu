@@ -54,6 +54,28 @@ p,li,dd{text-wrap:pretty}
 .is-offscreen .arena-tip{animation-play-state:paused}
 [data-state=paused] .arena-tip{animation:none;opacity:.5}
 @keyframes breathe{to{opacity:.3}}
+/* Voter pages: the same arena, dimmed, as a fixed backdrop behind the ballot. body paints its own background
+   (html has one too), which would cover a negative z-index, so the stage sits at base and the page rises above it. */
+.voting-stage{position:fixed;inset:0;z-index:var(--z-base);overflow:hidden;perspective:1600px;perspective-origin:60% 20%;pointer-events:none}
+.voting-art canvas{opacity:.42}
+.voting-stage~main,.voting-stage~.foot{position:relative}
+
+/* One arena travels between pages: hero -> login panel -> voting backdrop (cross-document view transitions;
+   other browsers simply navigate). The new page's canvas may not be painted yet when it is captured, so the
+   old image carries the move and the live canvas fades in at the end. */
+@view-transition{navigation:auto}
+.hero-art,.split-art [data-scene],.voting-art{view-transition-name:arena}
+.bar{view-transition-name:bar}
+::view-transition-old(root),::view-transition-new(root){animation-duration:.45s}
+::view-transition-group(arena){animation-duration:1s;animation-timing-function:cubic-bezier(.65,0,.2,1)}
+::view-transition-old(arena){animation:arena-hold 1s both}
+::view-transition-new(arena){animation:arena-reveal 1s both}
+:root:has(.voting-stage)::view-transition-old(arena){animation-name:arena-hold-dim}
+::view-transition-old(arena):only-child{animation:arena-reveal .35s reverse both}
+::view-transition-new(arena):only-child{animation:arena-reveal .6s both}
+@keyframes arena-hold{0%,75%{opacity:1}to{opacity:0}}
+@keyframes arena-hold-dim{0%{opacity:1}75%{opacity:.42}to{opacity:0}}
+@keyframes arena-reveal{0%,55%{opacity:0}to{opacity:1}}
 
 /* Shell */
 .bar{position:sticky;top:0;z-index:var(--z-header);display:flex;align-items:center;justify-content:space-between;gap:var(--space-6);
@@ -154,9 +176,10 @@ main{flex:1;display:flex;flex-direction:column;outline:none}
   -webkit-mask-image:linear-gradient(to right,rgb(0 0 0 / .45) 0,#000 45%),linear-gradient(to bottom,#000 75%,transparent);-webkit-mask-composite:source-in;
   mask-image:linear-gradient(to right,rgb(0 0 0 / .45) 0,#000 45%),linear-gradient(to bottom,#000 75%,transparent);mask-composite:intersect}
 /* The live arena is a tilted plane; panem.js eases --lean-* toward the pointer. */
-.hero-art{--size:max(120vmin,100vw);position:absolute;left:60%;top:60%;width:var(--size);aspect-ratio:1;margin:calc(var(--size) / -2) 0 0 calc(var(--size) / -2);
-  transform:rotateX(calc(50deg + var(--lean-y,0deg))) rotateZ(var(--lean-x,0deg)) scale(1);animation:arena-rise 1.8s cubic-bezier(.2,.7,.2,1) backwards}
-.hero-art canvas{width:100%!important;height:100%!important}
+.hero-art,.voting-art{--size:max(120vmin,100vw);position:absolute;left:60%;top:60%;width:var(--size);aspect-ratio:1;margin:calc(var(--size) / -2) 0 0 calc(var(--size) / -2);
+  transform:rotateX(calc(50deg + var(--lean-y,0deg))) rotateZ(var(--lean-x,0deg)) scale(1)}
+.hero-art{animation:arena-rise 1.8s cubic-bezier(.2,.7,.2,1) backwards}
+.hero-art canvas,.voting-art canvas{width:100%!important;height:100%!important}
 @keyframes arena-rise{from{opacity:0;transform:rotateX(80deg) rotateZ(-10deg) scale(.88)}}
 /* Copy hugs the left gutter (in line with the logo) rather than the centred .wrap. */
 .hero-copy{max-width:none;margin:0;padding-block:var(--space-12) var(--space-16)}
@@ -325,6 +348,7 @@ details[open] summary{margin-bottom:var(--space-3)}
   .hero-stage{position:relative;inset:auto;height:min(95vw,36rem);margin-top:calc(-1 * var(--space-6));
     -webkit-mask-image:linear-gradient(to bottom,#000 70%,transparent);mask-image:linear-gradient(to bottom,#000 70%,transparent)}
   .hero-art{--size:min(140vw,52rem);left:50%;top:52%}
+  .voting-art{--size:170vw;left:50%;top:58%}
   .hero-copy{position:relative;padding-block:0 var(--space-16)}
   .split{display:block;min-height:0}
   .split-art{height:80vw;border-right:0}
@@ -373,4 +397,5 @@ details[open] summary{margin-bottom:var(--space-3)}
 }
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+  ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}
 }
