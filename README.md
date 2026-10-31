@@ -1,6 +1,6 @@
 # HMTG “GEA” ITB — Pemilu
 
-Django 5.2 LTS / PostgreSQL backbone for separate kahim and senator voting. Indonesian and
+Django 5.2 LTS / PostgreSQL backbone for separate Ketua Himpunan (kahim) and senator voting. Indonesian and
 English screens, approved CSV voter list, emailed random credentials, MFA-protected committee,
 final per-office ballots, and automatic aggregate results after a 72-hour voting window.
 

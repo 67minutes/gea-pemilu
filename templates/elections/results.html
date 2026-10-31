@@ -9,10 +9,10 @@
   </header>
   {% if snapshot %}
   <div class="results-closed">
-    {% for office in snapshot.offices %}
+    {% for office in offices %}
     <section>
       <div class="result-head">
-        <h2 class="section-title">{{ office.slug|title }}</h2>
+        <h2 class="section-title">{{ office.label }}</h2>
         <p class="result-turnout"><span class="num">{{ office.turnout_percent }}%</span><span>{{ office.total }} / {{ snapshot.eligible }} {% translate "eligible voters" %}</span></p>
       </div>
       {% with a=office.candidates.0 b=office.candidates.1 %}

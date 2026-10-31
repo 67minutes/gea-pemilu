@@ -24,6 +24,7 @@
     </article>
     {% endfor %}
   </div>
+  <p class="assist gap-top">{% translate "Having trouble with your ballot?" %} <a class="textlink" href="{% url 'helpdesk' %}">{% translate "Contact the helpdesk" %}</a></p>
   <p class="fine privacy">{{ privacy_notice }}</p>
 </div>
 {% endblock %}

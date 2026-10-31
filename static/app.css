@@ -60,9 +60,7 @@ p,li,dd{text-wrap:pretty}
   min-height:var(--header);padding:env(safe-area-inset-top) max(var(--gutter),env(safe-area-inset-right)) 0 max(var(--gutter),env(safe-area-inset-left));
   background:var(--ink);border-bottom:1px solid var(--line)}
 .mark{display:flex;align-items:center;gap:var(--space-3);text-decoration:none;color:var(--bone)}
-.mark svg{width:1.5rem;height:1.5rem;flex:none}
-.mark-name{font-family:var(--display);font-weight:500;font-size:var(--text-2xl);line-height:1}
-.mark-sub{padding-left:var(--space-3);border-left:1px solid var(--line);font-size:var(--text-xs);line-height:var(--leading-xs);color:var(--dust)}
+.mark img{display:block;width:2.5rem;height:2.5rem;flex:none}
 .nav{display:flex;align-items:center;gap:var(--space-6);font-size:var(--text-sm);line-height:var(--leading-sm)}
 .nav a,.nav .navlink{position:relative;display:inline-flex;align-items:center;min-height:2.75rem;color:var(--dust);text-decoration:none;transition:color 150ms ease-out}
 .nav a:hover,.nav .navlink:hover{color:var(--bone)}
@@ -156,7 +154,6 @@ main{flex:1;display:flex;flex-direction:column;outline:none}
 .hero-copy{padding-block:var(--space-16)}
 .hero-copy>*{max-width:37.5rem}
 .hero-copy>.status{max-width:45rem;margin:var(--space-8) 0;background:var(--ink)}
-.rehearsal{display:inline-block;margin:0 0 var(--space-6);padding:var(--space-1) var(--space-3);border:1px dashed var(--line-strong);font-size:var(--text-xs);line-height:var(--leading-xs);color:var(--gold)}
 .hero-title{display:flex;flex-direction:column;margin:0 0 var(--space-6)}
 .hero-word{font-family:var(--display);font-style:italic;font-weight:300;font-size:var(--text-8xl);line-height:1}
 .hero-org{margin-top:var(--space-3);font-family:var(--display);font-weight:500;font-size:var(--text-2xl);line-height:var(--leading-2xl);color:var(--gold)}
@@ -246,6 +243,27 @@ main{flex:1;display:flex;flex-direction:column;outline:none}
 .waiting{display:grid;grid-template-columns:minmax(16rem,26rem) 1fr;align-items:center;gap:var(--space-16)}
 .waiting-art{position:relative;width:100%;aspect-ratio:1}
 
+/* About */
+.chair{display:grid;grid-template-columns:minmax(10rem,15rem) 1fr;align-items:end;gap:var(--space-10);max-width:44rem;margin-bottom:var(--space-16);padding-bottom:var(--space-10);border-bottom:1px solid var(--line)}
+.chair .mini-name{font-size:var(--text-4xl);line-height:var(--leading-4xl)}
+.crew{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-10) var(--space-6);margin:0;padding:0;list-style:none}
+.role{display:block;margin-top:var(--space-4);font-size:var(--text-xs);line-height:var(--leading-xs);color:var(--gold);letter-spacing:.04em;text-transform:uppercase}
+.nim{display:block;margin-top:var(--space-1);font-size:var(--text-sm);line-height:var(--leading-sm);color:var(--dust);font-variant-numeric:lining-nums tabular-nums}
+
+/* Helpdesk */
+.help-grid{display:grid;grid-template-columns:minmax(14rem,22rem) 1fr;align-items:start;gap:var(--space-16)}
+.qr{margin:0}
+.qr img{display:block;width:100%;height:auto;padding:var(--space-4);background:#fff}
+.qr figcaption{margin-top:var(--space-3);font-size:var(--text-sm);line-height:var(--leading-sm);color:var(--dust)}
+.contact{margin-bottom:var(--space-12);padding:var(--space-8);border:1px solid var(--line-strong);background:var(--coal)}
+.contact .mini-name{font-size:var(--text-3xl);line-height:var(--leading-3xl)}
+.contact .phone{display:block;margin:var(--space-2) 0 var(--space-6);font-size:var(--text-2xl);line-height:var(--leading-2xl);color:var(--bone);text-decoration:none}
+.faq{margin:0;padding:0;list-style:none}
+.faq li{padding:var(--space-5) 0;border-bottom:1px solid var(--line)}
+.faq li:first-child{border-top:1px solid var(--line)}
+.faq strong{display:block;margin-bottom:var(--space-1);font-family:var(--display);font-weight:500;font-size:var(--text-xl);line-height:var(--leading-xl)}
+.faq p{margin:0;font-size:var(--text-sm);line-height:var(--leading-sm);color:var(--dust)}
+
 /* Login and small cards */
 .split{flex:1;display:grid;grid-template-columns:1.1fr 1fr;min-height:calc(100dvh - var(--header))}
 .split-art{position:relative;overflow:hidden;border-right:1px solid var(--line)}
@@ -255,6 +273,8 @@ main{flex:1;display:flex;flex-direction:column;outline:none}
 .split-form .title,.card .title{margin-bottom:var(--space-4)}
 .card{width:100%;max-width:30rem;margin:0 auto;padding-block:var(--space-24)}
 .form-foot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:var(--space-4);margin:var(--space-8) 0 var(--space-10)}
+.assist{margin:0 0 var(--space-8);padding:var(--space-3) var(--space-4);border-left:2px solid var(--gold);background:var(--coal);font-size:var(--text-sm);line-height:var(--leading-sm);color:var(--dust)}
+.assist a{color:var(--bone)}
 .btn-block{width:100%}
 
 /* Committee */
@@ -294,10 +314,12 @@ details[open] summary{margin-bottom:var(--space-3)}
   .waiting{grid-template-columns:1fr}
   .waiting-art{max-width:22rem;margin:0 auto}
   .lineup{gap:var(--space-12)}
+  .crew{grid-template-columns:repeat(3,1fr)}
+  .help-grid{grid-template-columns:1fr;gap:var(--space-10)}
+  .qr{max-width:18rem}
 }
 @media (max-width:680px){
   .bar{flex-wrap:wrap;gap:0 var(--space-4);padding-bottom:var(--space-1)}
-  .mark-sub{display:none}
   .nav{flex-wrap:wrap;gap:var(--space-4)}
   .title{font-size:var(--text-4xl);line-height:var(--leading-4xl)}
   .hero-word{font-size:var(--text-7xl)}
@@ -307,6 +329,10 @@ details[open] summary{margin-bottom:var(--space-3)}
   .status-cell+.status-cell{padding-left:0;border-left:0}
   .status-cell:nth-child(even){padding-left:var(--space-4);border-left:1px solid var(--line)}
   .lineup,.offices,.results-closed,.steps{grid-template-columns:1fr}
+  .crew{grid-template-columns:1fr 1fr;gap:var(--space-8) var(--space-4)}
+  .chair{grid-template-columns:8rem 1fr;gap:var(--space-5)}
+  .chair .mini-name{font-size:var(--text-2xl);line-height:var(--leading-2xl)}
+  .contact{padding:var(--space-6)}
   .tributes{grid-template-columns:1fr;gap:var(--space-4)}
   .tribute{display:grid;grid-template-columns:6rem 1fr;grid-template-rows:auto auto 1fr;column-gap:var(--space-4);padding:var(--space-3) var(--space-3) var(--space-4)}
   .tribute .portrait{grid-row:1/span 3;height:auto;aspect-ratio:4/5;align-self:start}

@@ -1,0 +1,31 @@
+{% extends 'base.html' %}{% load i18n %}
+{% block title %}{% translate "About us" %}{% endblock %}
+{% block content %}
+<div class="wrap page">
+  <header class="page-head">
+    <p class="eyebrow">HMTG “GEA” ITB</p>
+    <h1 class="title">{% translate "Election committee" %}</h1>
+    <p class="quiet">{% translate "The committee prepares, runs, and safeguards the Ketua Himpunan and Senator election." %}</p>
+  </header>
+  {% with role=chair.0 name=chair.1 nim=chair.2 %}
+  <div class="chair mini">
+    <span class="portrait" aria-hidden="true"></span>
+    <div>
+      <span class="role">{% translate "Committee chair" %}</span>
+      <span class="mini-name">{{ name }}</span>
+      <span class="nim">NIM {{ nim }}</span>
+    </div>
+  </div>
+  {% endwith %}
+  <ul class="crew">
+    {% for role, name, nim in committee %}
+    <li class="mini">
+      <span class="portrait" aria-hidden="true"></span>
+      <span class="role">{{ role }}</span>
+      <span class="mini-name">{{ name }}</span>
+      <span class="nim">NIM {{ nim }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

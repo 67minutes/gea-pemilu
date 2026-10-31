@@ -8,7 +8,7 @@
   <link rel="preload" href="{% static 'fonts/cormorant-garamond-300.woff2' %}" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="{% static 'fonts/source-serif-4.woff2' %}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{% static 'app.css' %}">
-  <link rel="icon" href="{% static 'favicon.svg' %}" type="image/svg+xml">
+  <link rel="icon" href="{% static 'img/logo-64.png' %}" type="image/png">
   <script src="{% static 'vendor/p5.min.js' %}" defer></script>
   <script src="{% static 'js/panem.js' %}" defer></script>
 </head>
@@ -18,11 +18,12 @@
 {% with here=request.resolver_match.url_name %}
 <header class="bar">
   <a class="mark" href="{% url 'home' %}">
-    <svg viewBox="0 0 32 32" aria-hidden="true"><g fill="none" stroke="#c9a35c"><circle cx="16" cy="16" r="14.5"/><circle cx="16" cy="16" r="5" stroke="#d98a2b"/><path d="M16 1.5v4M16 26.5v4M1.5 16h4M26.5 16h4M5.7 5.7l2.9 2.9M23.4 23.4l2.9 2.9M5.7 26.3l2.9-2.9M23.4 8.6l2.9-2.9" stroke-width=".9"/></g></svg>
-    <span class="mark-name">GEA</span><span class="mark-sub">{% translate "Election" %} {% now "Y" %}</span>
+    <img src="{% static 'img/logo.png' %}" alt="HMTG “GEA” ITB" width="40" height="40">
   </a>
   <nav class="nav" aria-label="{% translate 'Main navigation' %}">
     <a href="{% url 'results' %}"{% if here == 'results' %} aria-current="page"{% endif %}>{% translate "Results" %}</a>
+    <a href="{% url 'about' %}"{% if here == 'about' %} aria-current="page"{% endif %}>{% translate "About us" %}</a>
+    <a href="{% url 'helpdesk' %}"{% if here == 'helpdesk' %} aria-current="page"{% endif %}>{% translate "Helpdesk" %}</a>
     {% if user.is_authenticated %}
       {% if user.is_staff %}<a href="{% url 'committee' %}"{% if here == 'committee' %} aria-current="page"{% endif %}>{% translate "Committee" %}</a>
       {% else %}<a href="{% url 'dashboard' %}"{% if here == 'dashboard' %} aria-current="page"{% endif %}>{% translate "My ballot" %}</a>{% endif %}
@@ -44,6 +45,7 @@
 <footer class="foot">
   <span>HMTG “GEA” ITB</span>
   <span>{% translate "All election times are in WIB (UTC+7)." %}</span>
+  <a href="{% url 'helpdesk' %}">{% translate "Need help? Contact the helpdesk" %}</a>
   <a href="{% url 'committee' %}">{% translate "Committee access" %}</a>
 </footer>
 </body>

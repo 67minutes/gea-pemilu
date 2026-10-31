@@ -1,0 +1,41 @@
+{% extends 'base.html' %}{% load i18n static %}
+{% block title %}{% translate "Helpdesk" %}{% endblock %}
+{% block content %}
+<div class="wrap page">
+  <header class="page-head">
+    <p class="eyebrow">HMTG “GEA” ITB</p>
+    <h1 class="title">{% translate "Helpdesk" %}</h1>
+    <p class="quiet">{% translate "Having trouble logging in or voting? Scan the QR code or contact the committee directly." %}</p>
+  </header>
+  <div class="help-grid">
+    <figure class="qr">
+      <img src="{% static 'img/helpdesk-qr.jpg' %}" alt="{% translate 'Helpdesk QR code' %}" width="1254" height="1254" loading="lazy">
+      <figcaption>{% translate "Scan with your phone camera to reach the helpdesk." %}</figcaption>
+    </figure>
+    <div>
+      <section class="contact" aria-labelledby="contact-title">
+        <p class="eyebrow" id="contact-title">{% translate "Contact person" %}</p>
+        <span class="mini-name">{{ contact.name }}</span>
+        <span class="nim">{% translate "Election committee" %} · {{ contact.role }}</span>
+        <a class="phone num" href="tel:+{{ contact.e164 }}">{{ contact.phone }}</a>
+        <div class="actions">
+          <a class="btn btn-solid" href="https://wa.me/{{ contact.e164 }}" target="_blank" rel="noopener">WhatsApp <span class="arrow" aria-hidden="true">→</span></a>
+          <a class="btn" href="tel:+{{ contact.e164 }}">{% translate "Call" %}</a>
+        </div>
+      </section>
+      <h2 class="section-title gap">{% translate "Common problems" %}</h2>
+      <ul class="faq">
+        <li><strong>{% translate "Haven't received your login credentials?" %}</strong>
+          <p>{% translate "Credentials are sent to your approved ITB email. Check your spam or promotions folder first, then contact us with your NIM and full name." %}</p></li>
+        <li><strong>{% translate "Forgot your password?" %}</strong>
+          <p>{% translate "Request a new one on the" %} <a class="textlink" href="{% url 'password_reset' %}">{% translate "password reset page" %}</a>. {% translate "The link goes to your approved ITB email." %}</p></li>
+        <li><strong>{% translate "Your NIM is not recognised?" %}</strong>
+          <p>{% translate "You may not be on the voter roll yet. Contact us with your NIM, full name, and ITB email so the committee can check." %}</p></li>
+        <li><strong>{% translate "Something went wrong while voting?" %}</strong>
+          <p>{% translate "Do not submit again. Contact us and include your receipt code if you received one." %}</p></li>
+      </ul>
+      <p class="fine gap-top">{% translate "The committee will never ask for your password." %}</p>
+    </div>
+  </div>
+</div>
+{% endblock %}
