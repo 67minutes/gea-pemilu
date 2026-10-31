@@ -33,6 +33,7 @@ from .services import (
 # Election committee (panitia), shown on the About page. Division titles are proper names, not translated.
 COMMITTEE_CHAIR = ("Ketua", "Wafda Agung Mulkinegara", "12024106")
 COMMITTEE = [
+    ("IT", "Sahara Nada Maheswari", "12024107"),
     ("Pencalonan", "Fernanda Rheza Adiyasa", "12024048"),
     ("Hearing", "Rayhan Pratama", "12024081"),
     ("Uji Panelis dan Debat", "Abdallah Yazid Ma’ruf", "12024034"),
@@ -46,7 +47,6 @@ COMMITTEE = [
     ("Operasional", "Daniel Sitopu", "12024079"),
     ("Sekretaris dan Bendahara", "Rayna Amelia", "12024097"),
     ("Disiplin", "Muhammad Iqbal Rifa’i", "12024076"),
-    ("IT", "Sahara Nada Maheswari", "12024107"),
 ]
 HELPDESK = {"name": "Sahara Nada Maheswari", "role": "IT", "phone": "0851-2804-7459", "e164": "6285128047459"}
 
