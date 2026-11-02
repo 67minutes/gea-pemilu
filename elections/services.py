@@ -14,7 +14,7 @@ from django.db.models import Count
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
-from .models import AuditEvent, Candidate, Election, Office, User, Vote, Voter
+from .models import AuditEvent, Candidate, Election, Office, User, Vote, Voter, VotingWindow
 
 
 class ElectionError(Exception):
@@ -47,6 +47,8 @@ def activate(actor):
     if election.activated_at:
         raise ElectionError(_("The election is already activated."))
     election.full_clean()
+    if not election.windows.exists():
+        raise ElectionError(_("Add at least one voting window before activating."))
     if database_now() >= election.opens_at:
         raise ElectionError(_("Set a future opening time before activating."))
     if set(election.offices.values_list("slug", flat=True)) != {"kahim", "senator"}:
@@ -59,6 +61,79 @@ def activate(actor):
     election.save(update_fields=["activated_at"])
     audit(actor, "election.activated", voter_count=election.voters.count())
     return election
+
+
+def is_voting_open(election, now):
+    return bool(election.activated_at and not election.paused
+                and election.windows.filter(starts_at__lte=now, ends_at__gt=now).exists())
+
+
+def sync_envelope(election):
+    """Keep opens_at/closes_at equal to the earliest window start and latest window end."""
+    windows = list(election.windows.all())
+    election.opens_at = min((w.starts_at for w in windows), default=None)
+    election.closes_at = max((w.ends_at for w in windows), default=None)
+    election.save(update_fields=["opens_at", "closes_at"])
+
+
+def check_window_change(election, now):
+    if election.activated_at and election.closes_at and now >= election.closes_at:
+        raise ElectionError(_("The election has closed; voting sessions can no longer change."))
+
+
+def check_no_overlap(election, starts_at, ends_at, exclude=None):
+    if ends_at <= starts_at:
+        raise ElectionError(_("A voting session must end after it starts."))
+    others = election.windows.filter(starts_at__lt=ends_at, ends_at__gt=starts_at)
+    if exclude:
+        others = others.exclude(pk=exclude.pk)
+    if others.exists():
+        raise ElectionError(_("Voting sessions cannot overlap."))
+
+
+@transaction.atomic
+def add_window(actor, starts_at, ends_at):
+    election = lock_election()
+    now = database_now()
+    check_window_change(election, now)
+    if election.activated_at and (starts_at <= now or starts_at < election.opens_at):
+        raise ElectionError(_("After activation, new sessions must start in the future and after the first session."))
+    check_no_overlap(election, starts_at, ends_at)
+    window = VotingWindow.objects.create(election=election, starts_at=starts_at, ends_at=ends_at)
+    sync_envelope(election)
+    audit(actor, "window.added", starts_at=starts_at.isoformat(), ends_at=ends_at.isoformat())
+    return window
+
+
+@transaction.atomic
+def extend_window(actor, window_id, ends_at):
+    election = lock_election()
+    now = database_now()
+    check_window_change(election, now)
+    window = VotingWindow.objects.filter(election=election, pk=window_id).first()
+    if not window:
+        raise ElectionError(_("Invalid voting session."))
+    if election.activated_at and (window.ends_at <= now or ends_at <= window.ends_at):
+        raise ElectionError(_("After activation, only a session that has not ended can be extended to a later end."))
+    check_no_overlap(election, window.starts_at, ends_at, exclude=window)
+    window.ends_at = ends_at
+    window.save(update_fields=["ends_at"])
+    sync_envelope(election)
+    audit(actor, "window.extended", window_id=window.pk, ends_at=ends_at.isoformat())
+    return window
+
+
+@transaction.atomic
+def remove_window(actor, window_id):
+    election = lock_election()
+    if election.activated_at:
+        raise ElectionError(_("Voting sessions cannot be removed after activation."))
+    window = VotingWindow.objects.filter(election=election, pk=window_id).first()
+    if not window:
+        raise ElectionError(_("Invalid voting session."))
+    window.delete()
+    sync_envelope(election)
+    audit(actor, "window.removed", window_id=window_id)
 
 
 @transaction.atomic
@@ -86,9 +161,9 @@ def submit_vote(user, office_slug, candidate_id, request_id):
     existing = Vote.objects.filter(election=election, voter=voter, office=office).first()
     if existing:
         return existing, False
-    now = database_now()
-    if not election.activated_at or election.paused or not election.opens_at <= now < election.closes_at:
+    if not is_voting_open(election, database_now()):
         raise ElectionError(_("Voting is not open."))
+    now = database_now()
     candidate = Candidate.objects.filter(pk=candidate_id, office=office).first()
     if not candidate:
         raise ElectionError(_("Invalid candidate for this office."))

@@ -4,7 +4,8 @@ import pytest
 from cryptography.fernet import Fernet
 from django.utils import timezone
 
-from elections.models import Candidate, Election, Office, User, Voter
+from elections.models import Candidate, Election, Office, User, Voter, VotingWindow
+from elections.services import sync_envelope
 
 
 @pytest.fixture(autouse=True)
@@ -25,7 +26,9 @@ def test_settings(settings):
 def make_election():
     def make(*, closes_in=timedelta(hours=2), active=True, voter_count=1, name='Pemilu HMTG "GEA" ITB'):
         closes = timezone.now() + closes_in
-        election = Election.objects.create(name=name, opens_at=closes - timedelta(hours=72), closes_at=closes)
+        election = Election.objects.create(name=name)
+        VotingWindow.objects.create(election=election, starts_at=closes - timedelta(hours=72), ends_at=closes)
+        sync_envelope(election)
         offices, candidates, voters = {}, {}, []
         for slug in ["kahim", "senator"]:
             offices[slug] = Office.objects.create(election=election, slug=slug)

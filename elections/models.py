@@ -30,8 +30,9 @@ class User(AbstractUser):
 class Election(models.Model):
     id = models.PositiveSmallIntegerField(primary_key=True, default=1, editable=False)
     name = models.CharField(_("Name"), max_length=150, default='Pemilu HMTG "GEA" ITB')
-    opens_at = models.DateTimeField(_("Opens at"))
-    closes_at = models.DateTimeField(_("Closes at"))
+    # Derived from the voting windows: earliest start and latest end (services.sync_envelope).
+    opens_at = models.DateTimeField(_("Opens at"), null=True, blank=True, editable=False)
+    closes_at = models.DateTimeField(_("Closes at"), null=True, blank=True, editable=False)
     activated_at = models.DateTimeField(null=True, blank=True, editable=False)
     paused = models.BooleanField(default=False, editable=False)
     finalized_at = models.DateTimeField(null=True, blank=True, editable=False)
@@ -49,12 +50,10 @@ class Election(models.Model):
                        ("review_ballots", "Review identity-linked ballots after closing")]
 
     def clean(self):
-        if self.opens_at and self.closes_at:
-            if (self.closes_at - self.opens_at).total_seconds() != 72 * 3600:
-                raise ValidationError("The election window must be exactly 72 hours.")
+        # closes_at may still grow after activation when an operator extends or adds a window.
         if self.pk:
             old = Election.objects.filter(pk=self.pk, activated_at__isnull=False).first()
-            if old and (old.name, old.opens_at, old.closes_at) != (self.name, self.opens_at, self.closes_at):
+            if old and (old.name, old.opens_at) != (self.name, self.opens_at):
                 raise ValidationError("Activated election configuration is frozen.")
 
     def save(self, *args, **kwargs):
@@ -70,14 +69,42 @@ class Election(models.Model):
         now = timezone.now()
         if not self.activated_at:
             return "draft"
+        if self.opens_at is None or now < self.opens_at:
+            return "scheduled"
         if now >= self.closes_at:
             return "closed"
-        if now < self.opens_at:
-            return "scheduled"
-        return "paused" if self.paused else "open"
+        if self.paused:
+            return "paused"
+        return "open" if self.current_window(now) else "between"
+
+    def current_window(self, now=None):
+        now = now or timezone.now()
+        return self.windows.filter(starts_at__lte=now, ends_at__gt=now).first()
+
+    def next_window(self, now=None):
+        now = now or timezone.now()
+        return self.windows.filter(starts_at__gt=now).first()
 
     def __str__(self):
         return self.name
+
+
+class VotingWindow(models.Model):
+    """A half-open voting session [starts_at, ends_at). Change only through the window services."""
+
+    election = models.ForeignKey(Election, on_delete=models.PROTECT, related_name="windows")
+    starts_at = models.DateTimeField(_("Starts at"))
+    ends_at = models.DateTimeField(_("Ends at"))
+
+    class Meta:
+        verbose_name = _("Voting session")
+        verbose_name_plural = _("Voting sessions")
+        ordering = ["starts_at"]
+        constraints = [models.CheckConstraint(condition=models.Q(ends_at__gt=models.F("starts_at")),
+                                              name="window_order")]
+
+    def __str__(self):
+        return f"{timezone.localtime(self.starts_at):%d %b %Y %H:%M}–{timezone.localtime(self.ends_at):%H:%M}"
 
 
 class Office(models.Model):

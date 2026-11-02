@@ -8,7 +8,8 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
 
-from elections.models import Candidate, Election, Office, User, Voter
+from elections.models import Candidate, Election, Office, User, Voter, VotingWindow
+from elections.services import sync_envelope
 
 
 class Command(BaseCommand):
@@ -28,7 +29,9 @@ class Command(BaseCommand):
         if not 1 <= options["voters"] <= 10000:
             raise CommandError("Choose 1–10000 synthetic voters.")
         start = timezone.now() - timedelta(minutes=1) if options["open"] else timezone.now() + timedelta(days=1)
-        election = Election.objects.create(name="DEMO — GEA ITB", opens_at=start, closes_at=start + timedelta(hours=72))
+        election = Election.objects.create(name="DEMO — GEA ITB")
+        VotingWindow.objects.create(election=election, starts_at=start, ends_at=start + timedelta(hours=72))
+        sync_envelope(election)
         for slug in ["kahim", "senator"]:
             office = Office.objects.create(election=election, slug=slug)
             for n in [1, 2]:

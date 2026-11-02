@@ -57,13 +57,15 @@ def test_password_change_cancels_stale_initial_credentials(make_election):
     assert delivery.status == "failed" and not delivery.encrypted_payload
 
 
-def test_launch_check_rejects_non_72_hour_election(make_election):
+def test_activated_election_name_and_opening_are_frozen(make_election):
     from django.core.exceptions import ValidationError
 
-    election, _o, _c, _v = make_election(active=False)
-    election.closes_at += timedelta(hours=1)
-    with pytest.raises(ValidationError):
-        election.save()
+    election, _o, _c, _v = make_election()
+    for field, value in [("name", "Changed"), ("opens_at", election.opens_at + timedelta(hours=1))]:
+        changed = type(election).objects.get(pk=election.pk)
+        setattr(changed, field, value)
+        with pytest.raises(ValidationError):
+            changed.save()
 
 
 def test_sensitive_receipt_and_reset_urls_are_redacted():
