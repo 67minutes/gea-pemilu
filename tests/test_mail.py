@@ -3,11 +3,12 @@ from unittest.mock import patch
 
 import pytest
 from django.core.management import call_command
+from django.urls import reverse
 from django.utils import timezone
 
 from elections.checks import production_configuration
 from elections.mail import enqueue, process_one, remaining_daily_budget
-from elections.models import EmailDelivery
+from elections.models import EmailDelivery, Voter
 from elections.services import request_credentials
 
 pytestmark = pytest.mark.django_db
@@ -105,3 +106,39 @@ def test_send_test_email_uses_configured_transport(settings, capsys):
     assert "GEA" in mail.outbox[0].subject
     out = capsys.readouterr().out
     assert "local-" in out and settings.SECRET_KEY not in out
+
+
+def request_reset(client, voter):
+    return client.post(reverse("password_reset"), {"email": voter.user.email})
+
+
+def test_reset_requests_capped_per_voter(client, make_election):
+    _e, _o, _c, v = make_election()
+    Voter.objects.filter(pk=v[0].pk).update(credentials_issued_at=timezone.now())
+    for _ in range(3):
+        request_reset(client, v[0])
+    assert EmailDelivery.objects.filter(kind="reset").count() == 1  # one pending at a time
+    for _ in range(4):
+        EmailDelivery.objects.filter(kind="reset", status="pending").update(status="sent", sent_at=timezone.now())
+        request_reset(client, v[0])
+    assert EmailDelivery.objects.filter(kind="reset").count() == 3  # three per rolling day
+
+
+def test_no_reset_email_before_credentials_are_issued(client, make_election):
+    _e, _o, _c, v = make_election()
+    assert request_reset(client, v[0]).status_code == 302
+    assert not EmailDelivery.objects.filter(kind="reset").exists()
+
+
+def test_resets_cannot_use_more_than_the_reserve(settings, make_election):
+    _e, _o, _c, v = make_election()
+    settings.EMAIL_DAILY_LIMIT = 10
+    settings.EMAIL_RESET_RESERVE = 2
+    resets = [enqueue(v[0].user, "reset", "Reset", "body") for _ in range(3)]
+    credentials = enqueue(v[0].user, "credentials", "Credentials", "body")
+    while process_one():
+        pass
+    assert EmailDelivery.objects.filter(kind="reset", status="sent").count() == 2
+    credentials.refresh_from_db()
+    resets[2].refresh_from_db()
+    assert credentials.status == "sent" and resets[2].status == "pending"

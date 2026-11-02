@@ -25,12 +25,26 @@ def enqueue(user, kind, subject, body):
                                         encrypted_payload=cipher().encrypt(json.dumps(payload).encode()).decode())
 
 
+RESETS_PER_USER_PER_DAY = 3
+
+
+def reset_allowed(user):
+    """Reset requests are public, so bound them per voter: they share the daily sending budget."""
+    if not user.voter.credentials_issued_at:
+        return False
+    recent = EmailDelivery.objects.filter(user=user, kind="reset", created_at__gte=timezone.now() - timedelta(hours=24))
+    return not recent.filter(status="pending").exists() and recent.count() < RESETS_PER_USER_PER_DAY
+
+
+def sent_in_last_day():
+    return EmailDelivery.objects.filter(sent_at__gte=timezone.now() - timedelta(hours=24))
+
+
 def remaining_daily_budget():
     """Sends left in the rolling 24-hour window, or None when no daily limit is configured."""
     if not settings.EMAIL_DAILY_LIMIT:
         return None
-    sent = EmailDelivery.objects.filter(sent_at__gte=timezone.now() - timedelta(hours=24)).count()
-    return max(0, settings.EMAIL_DAILY_LIMIT - sent)
+    return max(0, settings.EMAIL_DAILY_LIMIT - sent_in_last_day().count())
 
 
 def deliver(payload, key):
@@ -65,11 +79,16 @@ def process_one():
     Resend's 24h idempotency retention. The payload never changes during retries.
     Password resets go before credentials, and a spent daily budget leaves jobs pending.
     """
-    if remaining_daily_budget() == 0:
+    budget = remaining_daily_budget()
+    if budget == 0:
         return False
+    jobs = EmailDelivery.objects.select_for_update(skip_locked=True).filter(
+        status="pending", next_attempt_at__lte=timezone.now())
+    # Resets may use only their reserve of a limited budget, so a reset flood cannot starve credentials.
+    if budget is not None and sent_in_last_day().filter(kind="reset").count() >= settings.EMAIL_RESET_RESERVE:
+        jobs = jobs.exclude(kind="reset")
     with transaction.atomic():
-        delivery = EmailDelivery.objects.select_for_update(skip_locked=True).filter(
-            status="pending", next_attempt_at__lte=timezone.now()).order_by(
+        delivery = jobs.order_by(
             Case(When(kind="reset", then=0), default=1), "created_at").first()
         if not delivery:
             return False

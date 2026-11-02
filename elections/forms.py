@@ -6,7 +6,7 @@ from django.conf import settings
 from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
 from django.utils.translation import gettext_lazy as _
 
-from .mail import enqueue
+from .mail import enqueue, reset_allowed
 from .models import Candidate
 
 
@@ -59,5 +59,6 @@ class ApprovedPasswordResetForm(PasswordResetForm):
                   html_email_template_name=None):
         from django.template.loader import render_to_string
 
-        enqueue(context["user"], "reset", "GEA ITB — Reset password / Password reset",
-                render_to_string(email_template_name, context))
+        if reset_allowed(context["user"]):
+            enqueue(context["user"], "reset", "GEA ITB — Reset password / Password reset",
+                    render_to_string(email_template_name, context))

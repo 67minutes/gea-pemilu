@@ -167,6 +167,7 @@ def test_expired_jobs_do_not_resend(make_election):
 def test_reset_only_approved_addresses_and_preserves_votes(client, make_election):
     _e, _o, c, v = make_election()
     voter = v[0]
+    Voter.objects.filter(pk=voter.pk).update(credentials_issued_at=timezone.now())
     submit_vote(voter.user, "kahim", c["kahim"][0].pk, uuid.uuid4())
     client.force_login(voter.user)
     other = Client()
