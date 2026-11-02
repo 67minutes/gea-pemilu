@@ -1,0 +1,30 @@
+{% extends 'base.html' %}{% load i18n %}
+{% block title %}{% translate "Review your ballot" %}{% endblock %}
+{% block stage %}{% include 'elections/voting_stage.html' with e=election %}{% endblock %}
+{% block content %}
+<div class="wrap page">
+  <header class="page-head">
+    <p class="eyebrow">{{ election.name }}</p>
+    <h1 class="title">{% translate "Review your ballot" %}</h1>
+  </header>
+  {% for pick in picks %}
+  <section class="verdict review-pick">
+    <span class="portrait" aria-hidden="true"></span>
+    <div>
+      <p class="eyebrow">{{ pick.office }}</p>
+      <span class="num" aria-hidden="true">{{ pick.candidate.number|stringformat:"02d" }}</span>
+      <h2 class="verdict-name"><span class="sr-only">{{ pick.office }}: {{ pick.candidate.number }}. </span>{{ pick.candidate.name }}</h2>
+    </div>
+  </section>
+  {% endfor %}
+  <div class="final"><strong>{% translate "This vote is final." %}</strong><p>{% translate "After finalizing, you cannot change or delete these choices. You will be logged out." %}</p></div>
+  <form method="post" action="{% url 'ballot' %}">{% csrf_token %}{{ form.request_id }}
+    {% for pick in picks %}<input type="hidden" name="office_{{ pick.office.slug }}" value="{{ pick.candidate.pk }}">{% endfor %}
+    <div class="actions">
+      <button class="btn btn-final" type="submit" name="action" value="finalize">{% translate "Finalize ballot" %}</button>
+      <button class="btn" type="submit" name="action" value="change">{% translate "Change choices" %}</button>
+    </div>
+  </form>
+  <p class="fine privacy">{{ privacy_notice }}</p>
+</div>
+{% endblock %}

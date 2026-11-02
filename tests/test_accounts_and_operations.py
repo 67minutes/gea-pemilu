@@ -18,7 +18,6 @@ from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from django_otp.oath import totp
 from django_otp.plugins.otp_static.models import StaticDevice, StaticToken
-from django_otp.plugins.otp_totp.models import TOTPDevice
 from standardwebhooks.webhooks import Webhook
 
 from elections.mail import cipher, enqueue, process_one
@@ -30,24 +29,10 @@ from elections.services import (
     issue_credentials,
     parse_roster,
     request_credentials,
-    submit_vote,
+    submit_ballot,
 )
 
 pytestmark = pytest.mark.django_db
-
-
-def staff_client(*, review=False):
-    user = User.objects.create_user(username="committee", email="committee@itb.ac.id",
-                                    password="Committee-password-123!", is_staff=True)
-    codes = ["operate_election"] + (["review_ballots"] if review else [])
-    user.user_permissions.set(Permission.objects.filter(codename__in=codes))
-    device = TOTPDevice.objects.create(user=user, name="Authenticator", confirmed=True)
-    client = Client()
-    client.force_login(user)
-    session = client.session
-    session["otp_device_id"] = device.persistent_id
-    session.save()
-    return user, client, device
 
 
 @pytest.mark.parametrize("data", [
@@ -78,7 +63,7 @@ def test_roster_preview_import_and_freeze(make_election):
     assert e.activated_at
 
 
-def test_roster_http_preview_does_not_import(make_election):
+def test_roster_http_preview_does_not_import(make_election, staff_client):
     make_election(active=False)
     _staff, client, _device = staff_client()
     from django.core.files.uploadedfile import SimpleUploadedFile
@@ -167,7 +152,8 @@ def test_expired_jobs_do_not_resend(make_election):
 def test_reset_only_approved_addresses_and_preserves_votes(client, make_election):
     _e, _o, c, v = make_election()
     voter = v[0]
-    submit_vote(voter.user, "kahim", c["kahim"][0].pk, uuid.uuid4())
+    Voter.objects.filter(pk=voter.pk).update(credentials_issued_at=timezone.now())
+    submit_ballot(voter.user, {"kahim": c["kahim"][0].pk, "senator": c["senator"][0].pk}, uuid.uuid4())
     client.force_login(voter.user)
     other = Client()
     assert other.post(reverse("password_reset"), {"email": "unknown@itb.ac.id"}).status_code == 302
@@ -185,7 +171,7 @@ def test_reset_only_approved_addresses_and_preserves_votes(client, make_election
     assert client.get(reverse("dashboard")).status_code == 302  # old session invalidated
     voter.user.refresh_from_db()
     assert voter.user.check_password("New-example-password-456!")
-    assert Vote.objects.count() == 1
+    assert Vote.objects.count() == 2
 
 
 def test_throttle_is_shared_across_clients(make_election, settings):
@@ -270,12 +256,12 @@ def test_csrf_required_for_votes(make_election):
     _e, _o, c, v = make_election()
     client = Client(enforce_csrf_checks=True)
     client.force_login(v[0].user)
-    response = client.post(reverse("ballot", args=["kahim"]), {
-        "candidate": c["kahim"][0].pk, "request_id": uuid.uuid4(), "action": "submit"})
+    response = client.post(reverse("ballot"), {"office_kahim": c["kahim"][0].pk, "office_senator": c["senator"][0].pk,
+                                               "request_id": uuid.uuid4(), "action": "finalize"})
     assert response.status_code == 403 and Vote.objects.count() == 0
 
 
-def test_committee_requires_mfa_even_for_superuser(make_election):
+def test_committee_requires_mfa_even_for_superuser(make_election, staff_client):
     make_election()
     user, client, _device = staff_client()
     assert client.get(reverse("committee")).status_code == 200
@@ -288,7 +274,7 @@ def test_committee_requires_mfa_even_for_superuser(make_election):
     assert Client().post(reverse("login"), {"username": user.username, "password": "Committee-password-123!"}).status_code == 200
 
 
-def test_committee_otp_login_and_recovery_code(make_election):
+def test_committee_otp_login_and_recovery_code(make_election, staff_client):
     make_election()
     user, _client, device = staff_client()
     client = Client()
@@ -306,7 +292,7 @@ def test_committee_otp_login_and_recovery_code(make_election):
     assert not recovery.token_set.exists()
 
 
-def test_reviewer_permission_and_export_audit(make_election):
+def test_reviewer_permission_and_export_audit(make_election, staff_client):
     make_election(closes_in=timedelta(seconds=-1))
     user, client, _device = staff_client()
     assert client.get(reverse("export_results", args=["ballots"])).status_code == 403
@@ -323,9 +309,9 @@ def test_language_switch_and_profiles(client, make_election):
     client.post(reverse("set_language"), {"language": "en", "next": "/"})
     assert "How to vote" in client.get("/").content.decode()
     client.force_login(voters[0].user)
-    assert "Profile 1" in client.get(reverse("ballot", args=["kahim"])).content.decode()
+    assert "Profile 1" in client.get(reverse("ballot")).content.decode()
     client.post(reverse("set_language"), {"language": "id", "next": "/"})
-    assert "Profil 1" in client.get(reverse("ballot", args=["kahim"])).content.decode()
+    assert "Profil 1" in client.get(reverse("ballot")).content.decode()
 
 
 def test_signed_webhooks_and_replay(client, make_election, settings):

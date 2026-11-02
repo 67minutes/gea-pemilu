@@ -27,7 +27,8 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware", "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware", "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware", "django_otp.middleware.OTPMiddleware",
-    "django.contrib.messages.middleware.MessageMiddleware", "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware", "elections.kiosk.KioskMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "elections.middleware.RequestMetricsMiddleware", "elections.middleware.AuthenticationThrottleMiddleware",
 ]
 ROOT_URLCONF = "config.urls"
@@ -103,6 +104,18 @@ EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
 EMAIL_HOST = os.getenv("EMAIL_HOST", "localhost")
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", "1025"))
 EMAIL_TIMEOUT = 10
+# Gmail transport: the committee account and its app password, never the account password.
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+# Sends per rolling 24 hours (0 = unlimited); Gmail allows about 500.
+EMAIL_DAILY_LIMIT = int(os.getenv("EMAIL_DAILY_LIMIT", "0"))
+# Daily sends kept free for password resets while credentials are issued.
+EMAIL_RESET_RESERVE = int(os.getenv("EMAIL_RESET_RESERVE", "50"))
+# Shared kiosk laptops: a voter session ends after this many seconds without activity.
+KIOSK_IDLE_SECONDS = int(os.getenv("KIOSK_IDLE_SECONDS", "180"))
+# Voters may log in only from browsers the committee enrolled; the enrollment cookie lasts this long.
+KIOSK_REQUIRED = os.getenv("KIOSK_REQUIRED", "true").lower() == "true"
+KIOSK_COOKIE_AGE = int(os.getenv("KIOSK_COOKIE_AGE", str(60 * 24 * 3600)))
 PASSWORD_RESET_TIMEOUT = 3600
 THROTTLE_ACCOUNT_LIMIT = int(os.getenv("THROTTLE_ACCOUNT_LIMIT", "10"))
 # Failed logins for one account across all addresses; bounds distributed guessing.

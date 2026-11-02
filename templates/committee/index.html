@@ -1,4 +1,4 @@
-{% extends 'base.html' %}{% load i18n %}
+{% extends 'base.html' %}{% load i18n tz %}
 {% block title %}{% translate "Committee" %}{% endblock %}
 {% block content %}
 <div class="wrap page">
@@ -9,7 +9,8 @@
     </div>
     <nav class="links" aria-label="{% translate 'Committee' %}">
       <a class="textlink" href="{% url 'committee_admin:index' %}">{% translate "Election configuration" %}</a>
-      {% if can_operate %}<a class="textlink" href="{% url 'roster_import' %}">{% translate "Import voter CSV" %}</a>{% endif %}
+      {% if can_operate %}<a class="textlink" href="{% url 'roster_import' %}">{% translate "Import voter CSV" %}</a>
+      <a class="textlink" href="{% url 'kiosks' %}">{% translate "Kiosk laptops" %}</a>{% endif %}
     </nav>
   </header>
 
@@ -36,6 +37,29 @@
     {% endif %}
   {% else %}<p class="note">{% translate "Create the election and candidates in configuration first." %}</p>
     <a class="btn btn-solid gap-top" href="{% url 'committee_admin:index' %}">{% translate "Election configuration" %}</a>{% endif %}
+
+  {% if election and can_operate %}
+  <section class="panel" id="sessions">
+    <h2 class="section-title">{% translate "Voting sessions" %}</h2>
+    <p class="fine">{% if election.activated_at %}{% translate "After activation you can add future sessions or extend a session that has not ended. Sessions cannot be removed." %}{% else %}{% translate "Times are in WIB. Sessions cannot overlap." %}{% endif %}</p>
+    {% if windows %}
+    <div class="table-scroll"><table><thead><tr><th>{% translate "Session" %}</th><th>{% translate "Time (WIB)" %}</th><th></th></tr></thead><tbody>
+    {% for window in windows %}<tr>
+      <td>{{ window.starts_at|localtime|date:"D, d M Y" }}</td>
+      <td class="mono">{{ window.starts_at|localtime|date:"H:i" }}–{% if window.ends_at|localtime|date:"Ymd" != window.starts_at|localtime|date:"Ymd" %}{{ window.ends_at|localtime|date:"d M, " }}{% endif %}{{ window.ends_at|localtime|date:"H:i" }}</td>
+      <td>{% if not election.activated_at %}<form method="post" action="{% url 'committee_action' %}">{% csrf_token %}<input type="hidden" name="window_id" value="{{ window.pk }}"><button class="btn btn-small" name="action" value="remove_window">{% translate "Remove" %}</button></form>
+      {% elif window.ends_at > now and election.state != 'closed' %}<form method="post" action="{% url 'committee_action' %}" class="inline-form">{% csrf_token %}<input type="hidden" name="window_id" value="{{ window.pk }}"><label class="sr-only" for="extend-{{ window.pk }}">{% translate "New end" %}</label><input id="extend-{{ window.pk }}" type="datetime-local" name="ends_at" value="{{ window.ends_at|localtime|date:'Y-m-d\TH:i' }}" required><button class="btn btn-small" name="action" value="extend_window">{% translate "Extend end" %}</button></form>{% endif %}</td>
+    </tr>{% endfor %}
+    </tbody></table></div>
+    {% else %}<p class="note">{% translate "No voting sessions yet. Add at least one before activating." %}</p>{% endif %}
+    {% if election.state != 'closed' %}
+    <form method="post" action="{% url 'committee_action' %}" class="gap-top">{% csrf_token %}
+      {% include 'partials/fields.html' with form=window_form %}
+      <button class="btn btn-solid" name="action" value="add_window">{% translate "Add session" %}</button>
+    </form>
+    {% endif %}
+  </section>
+  {% endif %}
 
   <section class="panel">
     <h2 class="section-title">{% translate "Email delivery" %}</h2>

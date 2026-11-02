@@ -4,7 +4,7 @@ from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 from django_otp.admin import OTPAdminAuthenticationForm, OTPAdminSite
 
-from .models import AuditEvent, Candidate, Election, EmailDelivery, Office, Voter
+from .models import AuditEvent, Candidate, Election, EmailDelivery, KioskDevice, Office, Voter, VotingWindow
 from .services import audit
 
 site = OTPAdminSite(name="committee_admin")
@@ -60,10 +60,33 @@ class ConfigurationAdmin(admin.ModelAdmin):
         return super().log_change(request, obj, message)
 
 
+class VotingWindowInline(admin.TabularInline):
+    """Sessions are managed on the committee page, which enforces the activation rules."""
+
+    model = VotingWindow
+    fields = ["__str__"]
+    readonly_fields = ["__str__"]
+    extra = 0
+
+    def has_view_permission(self, request, obj=None):
+        return True  # the election change page itself is permission-gated
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
 @admin.register(Election, site=site)
 class ElectionAdmin(ConfigurationAdmin):
     fields = ["name", "opens_at", "closes_at"]
+    readonly_fields = ["opens_at", "closes_at"]
     list_display = ["name", "opens_at", "closes_at", "activated_at", "paused"]
+    inlines = [VotingWindowInline]
 
 
 @admin.register(Office, site=site)
@@ -102,6 +125,12 @@ class EmailDeliveryAdmin(ReadOnlyAdmin):
     fields = ["user", "kind", "status", "attempts", "last_error", "provider_id", "created_at", "delivered_at", "bounced_at"]
     list_display = ["user", "kind", "status", "attempts", "last_error", "delivered_at", "bounced_at"]
     list_filter = ["status", "kind"]
+
+
+@admin.register(KioskDevice, site=site)
+class KioskDeviceAdmin(ReadOnlyAdmin):
+    fields = ["label", "enrolled_at", "revoked_at"]
+    list_display = ["label", "enrolled_at", "revoked_at"]
 
 
 @admin.register(AuditEvent, site=site)

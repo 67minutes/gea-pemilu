@@ -1,7 +1,10 @@
 import csv
+import uuid
 from functools import wraps
 
+from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
 from django.core.exceptions import PermissionDenied
@@ -9,25 +12,30 @@ from django.db import connection
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
-from .forms import BallotForm, RosterForm, VoterLoginForm
-from .models import AuditEvent, Election, EmailDelivery, Office, Vote, Voter
+from .forms import BallotForm, KioskForm, RosterForm, VoterLoginForm, WindowForm
+from .kiosk import COOKIE, current_device, sign_device
+from .models import AuditEvent, Election, EmailDelivery, KioskDevice, Office, Vote, Voter
 from .services import (
     ElectionError,
     activate,
+    add_window,
     audit,
     delivery_summary,
+    extend_window,
     finalize_results,
     import_roster,
     parse_roster,
     published_results,
+    remove_window,
     request_credentials,
     revoke_access,
     set_paused,
-    submit_vote,
+    submit_ballot,
 )
 
 # Election committee (panitia), shown on the About page. Division titles are proper names, not translated.
@@ -56,6 +64,16 @@ class VoterLoginView(LoginView):
     authentication_form = VoterLoginForm
     redirect_authenticated_user = True
 
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        # Only the newest login stays signed in: KioskMiddleware ends any older session.
+        Voter.objects.filter(user=self.request.user).update(session_key=self.request.session.session_key)
+        return response
+
+    def get_context_data(self, **kwargs):
+        return {**super().get_context_data(**kwargs),
+                "kiosk_unenrolled": settings.KIOSK_REQUIRED and not current_device(self.request)}
+
 
 def committee_required(permission=None):
     def decorate(view):
@@ -81,48 +99,45 @@ def home(request):
 @require_GET
 def dashboard(request):
     voter = get_object_or_404(Voter, user=request.user, user__is_staff=False)
-    votes = {vote.office_id: vote for vote in voter.votes.select_related("office", "candidate")}
     return render(request, "elections/dashboard.html", {"election": voter.election,
-        "offices": [{"office": office, "vote": votes.get(office.pk)} for office in voter.election.offices.all()]})
+        "voted_at": voter.votes.order_by("submitted_at").values_list("submitted_at", flat=True).first()})
 
 
 @login_required
 @never_cache
 @require_http_methods(["GET", "POST"])
-def ballot(request, slug):
+def ballot(request):
     voter = get_object_or_404(Voter, user=request.user, user__is_staff=False)
-    office = get_object_or_404(Office, election=voter.election, slug=slug)
-    existing = Vote.objects.filter(voter=voter, office=office).first()
-    if existing:
-        return redirect("receipt", receipt_id=existing.receipt_id)
-    if voter.election.state != "open":
+    if voter.votes.exists():
+        return redirect("dashboard")
+    election = voter.election
+    if election.state != "open":
         messages.error(request, _("Voting is not open."))
         return redirect("dashboard")
-    form = BallotForm(request.POST or None, office=office)
-    if request.method == "POST" and form.is_valid():
-        if request.POST.get("action") == "submit":
+    form = BallotForm(request.POST or None, election=election)
+    action = request.POST.get("action")
+    if request.method == "POST" and action in {"review", "finalize"} and form.is_valid():
+        if action == "finalize":
             try:
-                vote, _created = submit_vote(request.user, slug, form.cleaned_data["candidate"].pk,
-                                             form.cleaned_data["request_id"])
+                submit_ballot(request.user, form.choices(), form.cleaned_data["request_id"])
             except ElectionError as exc:
                 messages.error(request, str(exc))
                 return redirect("dashboard")
-            return redirect("receipt", receipt_id=vote.receipt_id)
-        return render(request, "elections/confirm.html", {"form": form, "office": office,
-            "candidate": form.cleaned_data["candidate"]})
-    return render(request, "elections/ballot.html", {"form": form, "office": office,
-        "candidates": office.candidates.all()})
+            # The kiosk is shared: end the session so the next voter starts at the login page.
+            logout(request)
+            return redirect("done")
+        return render(request, "elections/review.html", {"form": form, "election": election,
+            "picks": [{"office": office, "candidate": form.cleaned_data[f"office_{office.slug}"]}
+                      for office in form.offices]})
+    if action == "change":
+        form.errors.clear()  # returning to edit is not a failed submission
+    return render(request, "elections/ballot.html", {"form": form, "election": election})
 
 
-@login_required
 @never_cache
 @require_GET
-def receipt(request, receipt_id):
-    vote = get_object_or_404(Vote.objects.select_related("office", "candidate"),
-                             receipt_id=receipt_id, voter__user=request.user)
-    remaining = Office.objects.filter(election=vote.election).exclude(
-        pk__in=Vote.objects.filter(voter=vote.voter).values("office_id"))
-    return render(request, "elections/receipt.html", {"vote": vote, "remaining": remaining})
+def done(request):
+    return render(request, "elections/done.html")
 
 
 @never_cache
@@ -159,7 +174,59 @@ def committee(request):
         "failed_deliveries": EmailDelivery.objects.filter(status="failed").select_related("user")[:100],
         "can_operate": request.user.has_perm("elections.operate_election"),
         "can_review": request.user.has_perm("elections.review_ballots"),
-        "voters": Voter.objects.select_related("user").order_by("user__username")})
+        "voters": Voter.objects.select_related("user").order_by("user__username"),
+        "windows": election.windows.all() if election else [], "now": timezone.now(),
+        "window_form": WindowForm()})
+
+
+def window_action(request, action):
+    form = WindowForm(request.POST)
+    if not form.is_valid():
+        raise ElectionError(_("Enter a valid date and time for the voting session."))
+    data = form.cleaned_data
+    if action == "add_window":
+        if not data["starts_at"]:
+            raise ElectionError(_("Enter a valid date and time for the voting session."))
+        add_window(request.user, data["starts_at"], data["ends_at"])
+    elif action == "extend_window":
+        extend_window(request.user, data["window_id"], data["ends_at"])
+
+
+@committee_required("elections.operate_election")
+@never_cache
+@require_http_methods(["GET", "POST"])
+def kiosks(request):
+    if request.method == "POST":
+        action = request.POST.get("action")
+        if action == "enroll":
+            form = KioskForm(request.POST)
+            if not form.is_valid():
+                messages.error(request, _("Enter a label for this laptop."))
+                return redirect("kiosks")
+            device = KioskDevice.objects.create(label=form.cleaned_data["label"])
+            audit(request.user, "kiosk.enrolled", device=str(device.pk), label=device.label)
+            messages.success(request, _("This browser is now enrolled. Log out of the committee before voters use it."))
+            response = redirect("kiosks")
+            response.set_cookie(COOKIE, sign_device(device), max_age=settings.KIOSK_COOKIE_AGE,
+                                secure=settings.SESSION_COOKIE_SECURE, httponly=True, samesite="Lax")
+            return response
+        if action == "revoke":
+            try:
+                device_id = uuid.UUID(request.POST.get("device_id", ""))
+            except ValueError:
+                device_id = None
+            device = device_id and KioskDevice.objects.filter(pk=device_id, revoked_at__isnull=True).first()
+            if not device:
+                messages.error(request, _("Invalid kiosk laptop."))
+                return redirect("kiosks")
+            device.revoked_at = timezone.now()
+            device.save(update_fields=["revoked_at"])
+            audit(request.user, "kiosk.revoked", device=str(device.pk), label=device.label)
+            messages.success(request, _("Kiosk laptop revoked. Voters signed in on it are logged out."))
+            return redirect("kiosks")
+        raise PermissionDenied
+    return render(request, "committee/kiosks.html", {"devices": KioskDevice.objects.all(),
+        "current": current_device(request), "form": KioskForm()})
 
 
 @committee_required("elections.operate_election")
@@ -195,6 +262,13 @@ def committee_action(request):
             activate(request.user)
         elif action in {"pause", "resume"}:
             set_paused(request.user, action == "pause")
+        elif action in {"add_window", "extend_window"}:
+            window_action(request, action)
+        elif action == "remove_window":
+            window_id = request.POST.get("window_id", "")
+            if not window_id.isdigit():
+                raise ElectionError(_("Invalid voting session."))
+            remove_window(request.user, int(window_id))
         elif action == "credentials":
             request_credentials(request.user)
             messages.success(request, _("Credential generation is queued. Check delivery status shortly."))

@@ -8,7 +8,7 @@ import pytest
 from django.db import close_old_connections, connection, transaction
 
 from elections.models import Election, Vote, Voter
-from elections.services import database_now, finalize_results, submit_vote
+from elections.services import database_now, finalize_results, submit_ballot
 
 pytestmark = pytest.mark.django_db(transaction=True)
 
@@ -27,15 +27,16 @@ def test_parallel_submissions_same_voter_count_once(make_election):
         close_old_connections()
         try:
             voter = Voter.objects.select_related("user").get(user_id=user_id)
-            vote, _created = submit_vote(voter.user, "kahim", c["kahim"][index % 2].pk, uuid.uuid4())
-            return vote.receipt_id
+            votes, _created = submit_ballot(voter.user, {"kahim": c["kahim"][index % 2].pk,
+                                            "senator": c["senator"][index % 2].pk}, uuid.uuid4())
+            return frozenset(vote.pk for vote in votes)
         finally:
             connection.close()
 
     with ThreadPoolExecutor(max_workers=12) as pool:
-        receipts = list(pool.map(submit, range(24)))
-    assert len(set(receipts)) == 1
-    assert Vote.objects.count() == 1
+        ballots = list(pool.map(submit, range(24)))
+    assert len(set(ballots)) == 1
+    assert Vote.objects.count() == 2
 
 
 def test_finalization_waits_for_acknowledged_boundary_vote(make_election):
@@ -48,7 +49,7 @@ def test_finalization_waits_for_acknowledged_boundary_vote(make_election):
         try:
             with transaction.atomic():
                 voter = Voter.objects.select_related("user").get(pk=v[0].pk)
-                submit_vote(voter.user, "kahim", c["kahim"][0].pk, uuid.uuid4())
+                submit_ballot(voter.user, {"kahim": c["kahim"][0].pk, "senator": c["senator"][0].pk}, uuid.uuid4())
                 inserted.set()
                 assert release.wait(5)
         finally:
@@ -74,5 +75,5 @@ def test_finalization_waits_for_acknowledged_boundary_vote(make_election):
         release.set()
         pending_vote.result(timeout=5)
         snapshot = pending_results.result(timeout=5)
-    assert sum(o["total"] for o in snapshot["offices"]) == 1
+    assert [o["total"] for o in snapshot["offices"]] == [1, 1]  # the whole ballot, both offices
     assert Election.objects.get().result_snapshot == snapshot

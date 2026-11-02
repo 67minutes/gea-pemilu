@@ -4,8 +4,8 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from elections.mail import process_one
-from elections.models import Election, ThrottleBucket
+from elections.mail import process_one, remaining_daily_budget
+from elections.models import Election, EmailDelivery, ThrottleBucket
 from elections.services import cleanup_expired_payloads, issue_credentials
 
 
@@ -20,7 +20,12 @@ class Command(BaseCommand):
         ThrottleBucket.objects.filter(window__lt=int(time.time()) // settings.THROTTLE_WINDOW_SECONDS - 12).delete()
         if Election.objects.filter(credentials_requested_at__isnull=False, activated_at__isnull=False,
                                    closes_at__gt=timezone.now()).exists():
-            issue_credentials(None, limit=10)
+            # Queue only what today's budget can send, so credentials never wait into the 23h expiry.
+            budget = remaining_daily_budget()
+            limit = 10 if budget is None else min(10, budget - settings.EMAIL_RESET_RESERVE
+                                                  - EmailDelivery.objects.filter(kind="credentials", status="pending").count())
+            if limit > 0:
+                issue_credentials(None, limit=limit)
         count = 0
         for _ in range(max(0, options["limit"])):
             if not process_one():

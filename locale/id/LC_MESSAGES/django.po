@@ -669,3 +669,279 @@ msgstr "Hubungi helpdesk"
 
 msgid "Having trouble with your ballot?"
 msgstr "Ada kendala dengan surat suara?"
+
+msgid "Voting session"
+msgstr "Sesi pemungutan suara"
+
+msgid "Voting sessions"
+msgstr "Sesi pemungutan suara"
+
+msgid "Starts at"
+msgstr "Waktu mulai"
+
+msgid "Ends at"
+msgstr "Waktu selesai"
+
+msgid "Starts"
+msgstr "Mulai"
+
+msgid "Ends"
+msgstr "Selesai"
+
+msgid "Add at least one voting window before activating."
+msgstr "Tambahkan minimal satu sesi pemungutan suara sebelum aktivasi."
+
+msgid "The election has closed; voting sessions can no longer change."
+msgstr "Pemilu sudah ditutup; sesi pemungutan suara tidak dapat diubah lagi."
+
+msgid "A voting session must end after it starts."
+msgstr "Sesi pemungutan suara harus berakhir setelah dimulai."
+
+msgid "Voting sessions cannot overlap."
+msgstr "Sesi pemungutan suara tidak boleh tumpang tindih."
+
+msgid ""
+"After activation, new sessions must start in the future and after the first "
+"session."
+msgstr ""
+"Setelah aktivasi, sesi baru harus dimulai di masa depan dan setelah sesi "
+"pertama."
+
+msgid "Invalid voting session."
+msgstr "Sesi pemungutan suara tidak valid."
+
+msgid ""
+"After activation, only a session that has not ended can be extended to a "
+"later end."
+msgstr ""
+"Setelah aktivasi, hanya sesi yang belum berakhir yang dapat diperpanjang ke "
+"waktu selesai yang lebih akhir."
+
+msgid "Voting sessions cannot be removed after activation."
+msgstr "Sesi pemungutan suara tidak dapat dihapus setelah aktivasi."
+
+msgid "Enter a valid date and time for the voting session."
+msgstr "Masukkan tanggal dan waktu yang valid untuk sesi pemungutan suara."
+
+msgid ""
+"After activation you can add future sessions or extend a session that has "
+"not ended. Sessions cannot be removed."
+msgstr ""
+"Setelah aktivasi, Anda dapat menambah sesi mendatang atau memperpanjang sesi"
+" yang belum berakhir. Sesi tidak dapat dihapus."
+
+msgid "Times are in WIB. Sessions cannot overlap."
+msgstr "Waktu dalam WIB. Sesi tidak boleh tumpang tindih."
+
+msgid "Session"
+msgstr "Sesi"
+
+msgid "Time (WIB)"
+msgstr "Waktu (WIB)"
+
+msgid "Remove"
+msgstr "Hapus"
+
+msgid "New end"
+msgstr "Waktu selesai baru"
+
+msgid "Extend end"
+msgstr "Perpanjang"
+
+msgid "No voting sessions yet. Add at least one before activating."
+msgstr ""
+"Belum ada sesi pemungutan suara. Tambahkan minimal satu sebelum aktivasi."
+
+msgid "Add session"
+msgstr "Tambah sesi"
+
+msgid "Between sessions"
+msgstr "Di antara sesi"
+
+msgid "Session ends in"
+msgstr "Sesi berakhir dalam"
+
+msgid "Next session in"
+msgstr "Sesi berikutnya dalam"
+
+msgid "Choose a candidate for every office."
+msgstr "Pilih kandidat untuk setiap jabatan."
+
+msgid "Choose a candidate for this office."
+msgstr "Pilih kandidat untuk jabatan ini."
+
+msgid "Your ballot"
+msgstr "Surat suara Anda"
+
+msgid "Choose one candidate for each office"
+msgstr "Pilih satu kandidat untuk setiap jabatan"
+
+msgid "Nothing is submitted until you finalize on the review screen."
+msgstr ""
+"Belum ada yang dikirim sampai Anda memfinalisasi di layar pemeriksaan."
+
+msgid "Review ballot"
+msgstr "Periksa surat suara"
+
+msgid "Review your ballot"
+msgstr "Periksa surat suara Anda"
+
+msgid ""
+"After finalizing, you cannot change or delete these choices. You will be "
+"logged out."
+msgstr ""
+"Setelah difinalisasi, pilihan ini tidak dapat diubah atau dihapus. Anda akan"
+" otomatis keluar."
+
+msgid "Finalize ballot"
+msgstr "Finalisasi surat suara"
+
+msgid "Change choices"
+msgstr "Ubah pilihan"
+
+msgid "Vote recorded"
+msgstr "Suara tercatat"
+
+msgid "Thank you"
+msgstr "Terima kasih"
+
+msgid "Your vote is recorded"
+msgstr "Suara Anda telah tercatat"
+
+msgid ""
+"You have been logged out. This screen returns to the login page in 10 "
+"seconds."
+msgstr "Anda telah keluar. Layar ini kembali ke halaman masuk dalam 10 detik."
+
+msgid "Next voter"
+msgstr "Selesai"
+
+msgid "You have voted"
+msgstr "Anda sudah memilih"
+
+msgid "Ballot finalized"
+msgstr "Surat suara difinalisasi"
+
+msgid "Start voting"
+msgstr "Mulai memilih"
+
+msgid ""
+"We could not complete this request. Check your ballot status before "
+"finalizing again."
+msgstr ""
+"Permintaan ini tidak dapat diselesaikan. Periksa status surat suara Anda "
+"sebelum memfinalisasi lagi."
+
+msgid "Your session ended after a period of inactivity."
+msgstr "Sesi Anda berakhir karena tidak ada aktivitas."
+
+msgid "You signed in on another laptop, so this session ended."
+msgstr "Anda masuk di laptop lain, sehingga sesi ini diakhiri."
+
+msgid "Session ends in %(seconds)s seconds. Touch the screen to continue."
+msgstr ""
+"Sesi berakhir dalam %(seconds)s detik — sentuh layar untuk melanjutkan."
+
+msgid "label"
+msgstr "label"
+
+msgid "Kiosk laptop"
+msgstr "Laptop pemungutan suara"
+
+msgid "Kiosk laptops"
+msgstr "Laptop pemungutan suara"
+
+msgid "This device is not a registered voting laptop."
+msgstr "Perangkat ini bukan laptop pemungutan suara yang terdaftar."
+
+msgid "Laptop label"
+msgstr "Nama laptop"
+
+msgid "e.g. Laptop 1"
+msgstr "mis. Laptop 1"
+
+msgid "Enter a label for this laptop."
+msgstr "Masukkan nama untuk laptop ini."
+
+msgid ""
+"This browser is now enrolled. Log out of the committee before voters use it."
+msgstr ""
+"Peramban ini sudah terdaftar. Keluar dari akun panitia sebelum pemilih "
+"menggunakannya."
+
+msgid "Invalid kiosk laptop."
+msgstr "Laptop pemungutan suara tidak valid."
+
+msgid "Kiosk laptop revoked. Voters signed in on it are logged out."
+msgstr ""
+"Laptop pemungutan suara dicabut. Pemilih yang masuk di laptop itu telah "
+"dikeluarkan."
+
+msgid ""
+"Voters can log in only from enrolled laptops. Open this page on each voting "
+"laptop, enroll it, then log out of the committee."
+msgstr ""
+"Pemilih hanya dapat masuk dari laptop yang terdaftar. Buka halaman ini di "
+"setiap laptop pemungutan suara, daftarkan, lalu keluar dari akun panitia."
+
+msgid "This browser is enrolled as “%(label)s”."
+msgstr "Peramban ini terdaftar sebagai “%(label)s”."
+
+msgid "This browser is not enrolled."
+msgstr "Peramban ini belum terdaftar."
+
+msgid "Enroll this browser"
+msgstr "Daftarkan peramban ini"
+
+msgid "Enrolled laptops"
+msgstr "Laptop terdaftar"
+
+msgid "Laptop"
+msgstr "Laptop"
+
+msgid "Enrolled (WIB)"
+msgstr "Didaftarkan (WIB)"
+
+msgid "this browser"
+msgstr "peramban ini"
+
+msgid "Active"
+msgstr "Aktif"
+
+msgid "Revoke"
+msgstr "Cabut"
+
+msgid ""
+"This device is not a registered voting laptop. Voting happens on the "
+"committee laptops at the polling station."
+msgstr ""
+"Perangkat ini bukan laptop pemungutan suara yang terdaftar. Pemungutan suara"
+" dilakukan di laptop panitia di tempat pemungutan suara."
+
+msgid ""
+"Come to the polling station during a voting session and log in on a "
+"committee laptop with your NIM and the password sent to your approved ITB "
+"email."
+msgstr ""
+"Datang ke tempat pemungutan suara selama sesi pemungutan suara dan masuk di "
+"laptop panitia dengan NIM serta kata sandi yang dikirim ke email ITB Anda "
+"yang disetujui."
+
+msgid "Choose a candidate for every office, then review your whole ballot."
+msgstr ""
+"Pilih kandidat untuk setiap jabatan, lalu periksa seluruh surat suara Anda."
+
+msgid ""
+"Finalize. Your ballot is saved at once and you are logged out for the next "
+"voter."
+msgstr ""
+"Finalisasi. Surat suara Anda tersimpan sekaligus dan Anda otomatis keluar "
+"untuk pemilih berikutnya."
+
+msgid ""
+"Tell a committee member at the polling station. Logging in again shows "
+"whether your ballot was saved; it is saved whole or not at all."
+msgstr ""
+"Beri tahu panitia di tempat pemungutan suara. Masuk kembali untuk melihat "
+"apakah surat suara Anda sudah tersimpan; surat suara tersimpan utuh atau "
+"tidak sama sekali."

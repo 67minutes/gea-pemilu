@@ -7,6 +7,7 @@
     <p class="eyebrow">HMTG “GEA” ITB</p>
     <h1 class="title">{% translate "Voter login" %}</h1>
     <p class="quiet gap">{% translate "Use your NIM and the password sent to your approved ITB email." %}</p>
+    {% if kiosk_unenrolled %}<p class="alert" role="status" data-kiosk="unenrolled">{% translate "This device is not a registered voting laptop. Voting happens on the committee laptops at the polling station." %}</p>{% endif %}
     <form method="post">{% csrf_token %}
       {% if form.non_field_errors %}<div class="alert" role="alert">{{ form.non_field_errors }}</div>{% endif %}
       {% include 'partials/fields.html' %}
