@@ -1,5 +1,6 @@
 {% extends 'base.html' %}{% load i18n %}
 {% block title %}{{ office }}{% endblock %}
+{% block stage %}{% include 'elections/voting_stage.html' with e=office.election %}{% endblock %}
 {% block content %}
 <div class="wrap page">
   <a class="back" href="{% url 'dashboard' %}"><span aria-hidden="true">←</span> {% translate "My ballot" %}</a>

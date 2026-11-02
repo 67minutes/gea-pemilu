@@ -38,3 +38,12 @@ def test_results_use_office_label(client, make_election):
     make_election(closes_in=-timedelta(minutes=1))
     page = client.get(reverse("results")).content.decode()
     assert "Ketua Himpunan" in page and ">Kahim<" not in page
+
+
+def test_voting_pages_carry_the_arena_backdrop(client, make_election):
+    election, _offices, _candidates, voters = make_election()
+    client.force_login(voters[0].user)
+    for url in [reverse("dashboard"), reverse("ballot", args=["kahim"])]:
+        page = client.get(url).content.decode()
+        assert 'class="voting-art" data-scene="arena" data-live="true"' in page
+        assert f'data-state="{election.state}"' in page
