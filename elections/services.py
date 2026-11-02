@@ -14,7 +14,7 @@ from django.db.models import Count
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
-from .models import AuditEvent, Candidate, Election, Office, User, Vote, Voter, VotingWindow
+from .models import AuditEvent, Candidate, Election, User, Vote, Voter, VotingWindow
 
 
 class ElectionError(Exception):
@@ -147,7 +147,8 @@ def set_paused(actor, paused):
 
 
 @transaction.atomic
-def submit_vote(user, office_slug, candidate_id, request_id):
+def submit_ballot(user, choices, request_id):
+    """Records the whole ballot in one transaction: every office or none."""
     election = lock_election()
     # Lock voter access too: revocation and a submission cannot race.
     voter = Voter.objects.select_for_update().select_related("user").filter(
@@ -155,21 +156,24 @@ def submit_vote(user, office_slug, candidate_id, request_id):
     ).first()
     if not voter:
         raise ElectionError(_("You are not eligible to vote."))
-    office = Office.objects.filter(election=election, slug=office_slug).first()
-    if not office:
-        raise ElectionError(_("Invalid office."))
-    existing = Vote.objects.filter(election=election, voter=voter, office=office).first()
+    existing = list(Vote.objects.filter(election=election, voter=voter).select_related("office"))
     if existing:
         return existing, False
-    if not is_voting_open(election, database_now()):
-        raise ElectionError(_("Voting is not open."))
     now = database_now()
-    candidate = Candidate.objects.filter(pk=candidate_id, office=office).first()
-    if not candidate:
-        raise ElectionError(_("Invalid candidate for this office."))
-    vote = Vote.objects.create(election=election, voter=voter, office=office, candidate=candidate,
-                               submitted_at=now, request_id=request_id)
-    return vote, True
+    if not is_voting_open(election, now):
+        raise ElectionError(_("Voting is not open."))
+    offices = {office.slug: office for office in election.offices.all()}
+    if set(choices) != set(offices):
+        raise ElectionError(_("Choose a candidate for every office."))
+    candidates = {}
+    for slug, office in offices.items():
+        candidate = Candidate.objects.filter(pk=choices[slug], office=office).first()
+        if not candidate:
+            raise ElectionError(_("Invalid candidate for this office."))
+        candidates[slug] = candidate
+    return [Vote.objects.create(election=election, voter=voter, office=offices[slug], candidate=candidate,
+                                submitted_at=now, request_id=request_id)
+            for slug, candidate in candidates.items()], True
 
 
 def published_results():

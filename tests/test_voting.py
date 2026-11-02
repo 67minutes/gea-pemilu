@@ -5,43 +5,78 @@ from unittest.mock import patch
 import pytest
 from django.core.exceptions import ValidationError
 from django.db import DatabaseError, IntegrityError, connection, transaction
-from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
 
 from elections.models import AuditEvent, Candidate, Election, Vote
-from elections.services import ElectionError, finalize_results, revoke_access, set_paused, submit_vote
+from elections.services import ElectionError, finalize_results, revoke_access, set_paused, submit_ballot
 
 pytestmark = pytest.mark.django_db
 
 
-def cast(voter, office, candidate):
-    return submit_vote(voter.user, office, candidate.pk, uuid.uuid4())
+def ballot(voter, c, k=0, s=0, request_id=None):
+    return submit_ballot(voter.user, {"kahim": c["kahim"][k].pk, "senator": c["senator"][s].pk},
+                         request_id or uuid.uuid4())
 
 
-def test_separate_votes_and_retries_cannot_replace(make_election):
-    _e, _o, candidates, voters = make_election()
-    voter = voters[0]
-    first, created = cast(voter, "kahim", candidates["kahim"][0])
-    assert created
-    duplicate, created = cast(voter, "kahim", candidates["kahim"][1])
-    assert not created and duplicate.pk == first.pk
-    assert duplicate.candidate_id == candidates["kahim"][0].pk
-    assert not Vote.objects.filter(voter=voter, office__slug="senator").exists()
-    cast(voter, "senator", candidates["senator"][1])
-    assert Vote.objects.filter(voter=voter).count() == 2
+def choices(c, k=0, s=0, action="review", request_id=None):
+    return {"office_kahim": c["kahim"][k].pk, "office_senator": c["senator"][s].pk,
+            "request_id": str(request_id or uuid.uuid4()), "action": action}
 
 
-def test_wrong_office_and_unknown_office_rejected(make_election):
-    _e, _o, candidates, voters = make_election()
-    for slug, candidate in [("kahim", candidates["senator"][0]), ("missing", candidates["kahim"][0])]:
-        with pytest.raises(ElectionError):
-            cast(voters[0], slug, candidate)
+def test_finalize_writes_every_office_atomically(make_election):
+    _e, _o, c, v = make_election()
+    request_id = uuid.uuid4()
+    votes, created = ballot(v[0], c, 0, 1, request_id)
+    assert created and len(votes) == 2
+    assert {vote.request_id for vote in votes} == {request_id}
+    assert {(vote.office.slug, vote.candidate_id) for vote in votes} == {
+        ("kahim", c["kahim"][0].pk), ("senator", c["senator"][1].pk)}
+
+
+def test_second_finalize_returns_existing_and_changes_nothing(make_election):
+    _e, _o, c, v = make_election()
+    first, _created = ballot(v[0], c, 0, 0)
+    again, created = ballot(v[0], c, 1, 1)
+    assert not created
+    assert {vote.pk for vote in again} == {vote.pk for vote in first}
+    assert set(Vote.objects.values_list("candidate_id", flat=True)) == {c["kahim"][0].pk, c["senator"][0].pk}
+    assert Vote.objects.count() == 2
+
+
+@pytest.mark.parametrize("bad", ["missing", "extra", "wrong_office"])
+def test_incomplete_or_mismatched_choices_rejected(make_election, bad):
+    _e, _o, c, v = make_election()
+    picks = {"kahim": c["kahim"][0].pk, "senator": c["senator"][0].pk}
+    if bad == "missing":
+        del picks["senator"]
+    elif bad == "extra":
+        picks["bendahara"] = c["kahim"][0].pk
+    else:
+        picks["kahim"] = c["senator"][0].pk
+    with pytest.raises(ElectionError):
+        submit_ballot(v[0].user, picks, uuid.uuid4())
     assert Vote.objects.count() == 0
 
 
-@pytest.mark.parametrize("state", ["draft", "scheduled", "closed", "paused", "revoked"])
-def test_closed_inactive_and_ineligible_rejected(make_election, state):
+def test_failure_on_second_office_saves_nothing(make_election):
+    _e, _o, c, v = make_election()
+    real_create = Vote.objects.create
+    calls = []
+
+    def create(**kwargs):
+        calls.append(kwargs)
+        if len(calls) == 2:
+            raise DatabaseError("simulated failure")
+        return real_create(**kwargs)
+
+    with patch.object(Vote.objects, "create", side_effect=create), pytest.raises(DatabaseError):
+        ballot(v[0], c)
+    assert Vote.objects.count() == 0
+
+
+@pytest.mark.parametrize("state", ["draft", "scheduled", "closed", "paused", "revoked", "at_ends_at"])
+def test_finalize_refused_when_not_open(make_election, state):
     kwargs = {"active": state != "draft"}
     if state == "closed":
         kwargs["closes_in"] = timedelta(seconds=-1)
@@ -53,26 +88,38 @@ def test_closed_inactive_and_ineligible_rejected(make_election, state):
     if state == "revoked":
         revoke_access(None, voters[0].pk)
     with pytest.raises(ElectionError):
-        cast(voters[0], "kahim", candidates["kahim"][0])
+        if state == "at_ends_at":
+            with patch("elections.services.database_now", return_value=election.windows.get().ends_at):
+                ballot(voters[0], candidates)
+        else:
+            ballot(voters[0], candidates)
     assert Vote.objects.count() == 0
-    election.refresh_from_db()
-    assert election.closes_at == kwargs.get("closes_at", election.closes_at)
+
+
+def test_finalize_refused_between_sessions(make_election):
+    from tests.test_windows import H, build
+
+    _e, candidates, voters = build(make_election, (-2 * H, -H), (H, 2 * H))
+    with pytest.raises(ElectionError):
+        ballot(voters[0], candidates)
+    assert Vote.objects.count() == 0
 
 
 def test_pause_preserves_deadline_and_existing_votes(make_election):
     e, _o, c, v = make_election()
-    cast(v[0], "kahim", c["kahim"][0])
+    ballot(v[0], c)
     original = e.closes_at
     set_paused(None, True)
     set_paused(None, False)
     revoke_access(None, v[0].pk)
     e.refresh_from_db()
-    assert e.closes_at == original and Vote.objects.count() == 1
+    assert e.closes_at == original and Vote.objects.count() == 2
 
 
 def test_database_uniqueness(make_election):
     _e, _o, c, v = make_election()
-    vote, _ = cast(v[0], "kahim", c["kahim"][0])
+    votes, _ = ballot(v[0], c)
+    vote = next(x for x in votes if x.office.slug == "kahim")
     with pytest.raises(IntegrityError), transaction.atomic():
         Vote.objects.create(election_id=vote.election_id, voter=vote.voter, office=vote.office,
             candidate=c["kahim"][1], submitted_at=timezone.now(), request_id=uuid.uuid4())
@@ -80,7 +127,7 @@ def test_database_uniqueness(make_election):
 
 def test_votes_immutable_model_and_database(make_election):
     _e, _o, c, v = make_election()
-    vote, _ = cast(v[0], "kahim", c["kahim"][0])
+    vote = ballot(v[0], c)[0][0]
     with pytest.raises(ValidationError):
         vote.save()
     with pytest.raises(ValidationError):
@@ -94,7 +141,7 @@ def test_votes_immutable_model_and_database(make_election):
 
 def test_no_results_or_exports_before_close(client, make_election):
     _e, _o, c, v = make_election()
-    cast(v[0], "kahim", c["kahim"][0])
+    ballot(v[0], c)
     assert finalize_results() is None
     response = client.get(reverse("results"))
     assert response.status_code == 200
@@ -134,28 +181,84 @@ def test_finalization_is_stable_and_anonymous(client, make_election):
             Election.objects.filter(pk=e.pk).update(result_snapshot={"tampered": True})
 
 
-def test_http_review_and_confirmation_and_other_voter_receipt(client, make_election):
-    _e, _o, c, v = make_election(voter_count=2)
+def test_review_then_finalize_logs_out_and_hides_choice(client, make_election):
+    _e, _o, c, v = make_election()
     client.force_login(v[0].user)
-    page = client.get(reverse("ballot", args=["kahim"]))
-    assert b"checked" not in page.content  # no default selection
-    payload = {"candidate": c["kahim"][0].pk, "request_id": str(uuid.uuid4()), "action": "review"}
-    review = client.post(reverse("ballot", args=["kahim"]), payload)
+    page = client.get(reverse("ballot"))
+    assert page.status_code == 200 and b"checked" not in page.content  # no default selection
+    payload = choices(c, 0, 1)
+    review = client.post(reverse("ballot"), payload)
     assert review.status_code == 200 and Vote.objects.count() == 0
-    payload["action"] = "submit"
-    receipt = client.post(reverse("ballot", args=["kahim"]), payload)
-    assert receipt.status_code == 302 and Vote.objects.count() == 1
-    assert client.post(reverse("ballot", args=["kahim"]), payload).url == receipt.url
-    other = Client()
-    other.force_login(v[1].user)
-    assert other.get(receipt.url).status_code == 404
+    content = review.content.decode()
+    assert c["kahim"][0].name in content and c["senator"][1].name in content
+    payload["action"] = "finalize"
+    done = client.post(reverse("ballot"), payload)
+    assert done.status_code == 302 and done.url == reverse("done") and Vote.objects.count() == 2
+    page = client.get(reverse("done")).content.decode()
+    assert c["kahim"][0].name not in page and c["senator"][1].name not in page
+    assert v[0].user.username not in page and str(Vote.objects.first().receipt_id) not in page
+    assert '<meta http-equiv="refresh"' in page
+    assert client.get(reverse("ballot")).url.startswith(reverse("login"))
+    assert client.get(reverse("dashboard")).url.startswith(reverse("login"))
+
+
+def test_change_returns_to_ballot_with_selection(client, make_election):
+    _e, _o, c, v = make_election()
+    client.force_login(v[0].user)
+    page = client.post(reverse("ballot"), choices(c, 1, 0, action="change")).content.decode()
+    assert f'value="{c["kahim"][1].pk}" required checked' in page
+    assert Vote.objects.count() == 0
+
+
+def test_incomplete_review_shows_the_ballot_again(client, make_election):
+    _e, _o, c, v = make_election()
+    client.force_login(v[0].user)
+    payload = choices(c)
+    del payload["office_senator"]
+    response = client.post(reverse("ballot"), payload)
+    assert response.status_code == 200 and 'role="alert"' in response.content.decode()
+    assert Vote.objects.count() == 0
+
+
+def test_window_closes_during_review_keeps_voter_logged_in(client, make_election):
+    _e, _o, c, v = make_election()
+    client.force_login(v[0].user)
+    payload = choices(c)
+    client.post(reverse("ballot"), payload)
+    set_paused(None, True)
+    payload["action"] = "finalize"
+    response = client.post(reverse("ballot"), payload)
+    assert response.status_code == 302 and response.url == reverse("dashboard")
+    assert Vote.objects.count() == 0
+    dashboard = client.get(reverse("dashboard"))
+    assert dashboard.status_code == 200
+    assert [m.level_tag for m in dashboard.context["messages"]] == ["error"]
+
+
+def test_already_voted_voter_sees_done_state_not_ballot(client, make_election):
+    _e, _o, c, v = make_election()
+    ballot(v[0], c)
+    client.force_login(v[0].user)
+    response = client.get(reverse("ballot"))
+    assert response.status_code == 302 and response.url == reverse("dashboard")
+    page = client.get(reverse("dashboard")).content.decode()
+    assert 'data-voted="true"' in page and c["kahim"][0].name not in page
+
+
+def test_voter_pages_are_no_store(client, make_election):
+    _e, _o, c, v = make_election()
+    client.force_login(v[0].user)
+    responses = [client.get(reverse("ballot")), client.get(reverse("dashboard")),
+                 client.post(reverse("ballot"), choices(c)), client.get(reverse("done"))]
+    for response in responses:
+        assert "no-store" in response["Cache-Control"]
 
 
 def test_submission_checks_database_deadline_not_browser(make_election):
     e, _o, c, v = make_election()
     with patch("elections.services.database_now", return_value=e.closes_at):
         with pytest.raises(ElectionError):
-            cast(v[0], "kahim", c["kahim"][0])
+            ballot(v[0], c)
 
 
 def test_postgres_configuration_and_snapshot_guards(make_election):

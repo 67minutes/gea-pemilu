@@ -10,7 +10,7 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 
 from elections.models import AuditEvent, EmailDelivery
-from elections.services import issue_credentials, submit_vote
+from elections.services import issue_credentials, submit_ballot
 
 pytestmark = pytest.mark.django_db
 
@@ -33,11 +33,10 @@ def test_archive_encryption_and_manifest(make_election, tmp_path):
 
 def test_rehearsal_receipts_reconcile(make_election, tmp_path):
     _e, _o, candidates, voters = make_election(name="DEMO — Rehearsal")
-    records = []
-    for slug in ["kahim", "senator"]:
-        vote, _ = submit_vote(voters[0].user, slug, candidates[slug][0].pk, uuid.uuid4())
-        records.append({"type": "receipt", "nim": voters[0].user.username, "office": slug,
-                        "receipt_id": str(vote.receipt_id)})
+    votes, _ = submit_ballot(voters[0].user, {slug: candidates[slug][0].pk for slug in ["kahim", "senator"]},
+                             uuid.uuid4())
+    records = [{"type": "receipt", "nim": voters[0].user.username, "office": vote.office.slug,
+                "receipt_id": str(vote.receipt_id)} for vote in votes]
     path = tmp_path / "receipts.jsonl"
     path.write_text("\n".join(json.dumps(record) for record in records))
     call_command("verify_rehearsal", str(path), expected_voters=1, stdout=StringIO())

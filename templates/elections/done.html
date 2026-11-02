@@ -1,0 +1,12 @@
+{% extends 'base.html' %}{% load i18n %}
+{% block title %}{% translate "Vote recorded" %}{% endblock %}
+{% block head %}<meta http-equiv="refresh" content="10;url={% url 'login' %}">{% endblock %}
+{% block content %}
+<div class="wrap page receipt-page">
+  <div class="seal" data-scene="seal" data-mark="✓" aria-hidden="true"></div>
+  <p class="eyebrow">{% translate "Thank you" %}</p>
+  <h1 class="title">{% translate "Your vote is recorded" %}</h1>
+  <p class="quiet gap">{% translate "You have been logged out. This screen returns to the login page in 10 seconds." %}</p>
+  <a class="btn btn-solid" href="{% url 'login' %}">{% translate "Next voter" %} <span class="arrow" aria-hidden="true">→</span></a>
+</div>
+{% endblock %}

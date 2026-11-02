@@ -145,11 +145,11 @@ def test_activation_with_future_window(make_election):
 
 
 def test_service_rejects_vote_between_windows(make_election):
-    from elections.services import submit_vote
+    from elections.services import submit_ballot
 
     election, candidates, voters = build(make_election, (-2 * H, -H), (H, 2 * H))
     with pytest.raises(ElectionError):
-        submit_vote(voters[0].user, "kahim", candidates["kahim"][0].pk, uuid.uuid4())
+        submit_ballot(voters[0].user, {slug: candidates[slug][0].pk for slug in candidates}, uuid.uuid4())
     with patch("elections.services.database_now", return_value=election.windows.last().starts_at):
         assert is_voting_open(election, election.windows.last().starts_at)
 

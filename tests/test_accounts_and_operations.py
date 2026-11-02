@@ -29,7 +29,7 @@ from elections.services import (
     issue_credentials,
     parse_roster,
     request_credentials,
-    submit_vote,
+    submit_ballot,
 )
 
 pytestmark = pytest.mark.django_db
@@ -153,7 +153,7 @@ def test_reset_only_approved_addresses_and_preserves_votes(client, make_election
     _e, _o, c, v = make_election()
     voter = v[0]
     Voter.objects.filter(pk=voter.pk).update(credentials_issued_at=timezone.now())
-    submit_vote(voter.user, "kahim", c["kahim"][0].pk, uuid.uuid4())
+    submit_ballot(voter.user, {"kahim": c["kahim"][0].pk, "senator": c["senator"][0].pk}, uuid.uuid4())
     client.force_login(voter.user)
     other = Client()
     assert other.post(reverse("password_reset"), {"email": "unknown@itb.ac.id"}).status_code == 302
@@ -171,7 +171,7 @@ def test_reset_only_approved_addresses_and_preserves_votes(client, make_election
     assert client.get(reverse("dashboard")).status_code == 302  # old session invalidated
     voter.user.refresh_from_db()
     assert voter.user.check_password("New-example-password-456!")
-    assert Vote.objects.count() == 1
+    assert Vote.objects.count() == 2
 
 
 def test_throttle_is_shared_across_clients(make_election, settings):
@@ -256,8 +256,8 @@ def test_csrf_required_for_votes(make_election):
     _e, _o, c, v = make_election()
     client = Client(enforce_csrf_checks=True)
     client.force_login(v[0].user)
-    response = client.post(reverse("ballot", args=["kahim"]), {
-        "candidate": c["kahim"][0].pk, "request_id": uuid.uuid4(), "action": "submit"})
+    response = client.post(reverse("ballot"), {"office_kahim": c["kahim"][0].pk, "office_senator": c["senator"][0].pk,
+                                               "request_id": uuid.uuid4(), "action": "finalize"})
     assert response.status_code == 403 and Vote.objects.count() == 0
 
 
@@ -309,9 +309,9 @@ def test_language_switch_and_profiles(client, make_election):
     client.post(reverse("set_language"), {"language": "en", "next": "/"})
     assert "How to vote" in client.get("/").content.decode()
     client.force_login(voters[0].user)
-    assert "Profile 1" in client.get(reverse("ballot", args=["kahim"])).content.decode()
+    assert "Profile 1" in client.get(reverse("ballot")).content.decode()
     client.post(reverse("set_language"), {"language": "id", "next": "/"})
-    assert "Profil 1" in client.get(reverse("ballot", args=["kahim"])).content.decode()
+    assert "Profil 1" in client.get(reverse("ballot")).content.decode()
 
 
 def test_signed_webhooks_and_replay(client, make_election, settings):

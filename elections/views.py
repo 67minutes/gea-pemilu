@@ -2,6 +2,7 @@ import csv
 from functools import wraps
 
 from django.contrib import messages
+from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
 from django.core.exceptions import PermissionDenied
@@ -31,7 +32,7 @@ from .services import (
     request_credentials,
     revoke_access,
     set_paused,
-    submit_vote,
+    submit_ballot,
 )
 
 # Election committee (panitia), shown on the About page. Division titles are proper names, not translated.
@@ -85,48 +86,45 @@ def home(request):
 @require_GET
 def dashboard(request):
     voter = get_object_or_404(Voter, user=request.user, user__is_staff=False)
-    votes = {vote.office_id: vote for vote in voter.votes.select_related("office", "candidate")}
     return render(request, "elections/dashboard.html", {"election": voter.election,
-        "offices": [{"office": office, "vote": votes.get(office.pk)} for office in voter.election.offices.all()]})
+        "voted_at": voter.votes.order_by("submitted_at").values_list("submitted_at", flat=True).first()})
 
 
 @login_required
 @never_cache
 @require_http_methods(["GET", "POST"])
-def ballot(request, slug):
+def ballot(request):
     voter = get_object_or_404(Voter, user=request.user, user__is_staff=False)
-    office = get_object_or_404(Office, election=voter.election, slug=slug)
-    existing = Vote.objects.filter(voter=voter, office=office).first()
-    if existing:
-        return redirect("receipt", receipt_id=existing.receipt_id)
-    if voter.election.state != "open":
+    if voter.votes.exists():
+        return redirect("dashboard")
+    election = voter.election
+    if election.state != "open":
         messages.error(request, _("Voting is not open."))
         return redirect("dashboard")
-    form = BallotForm(request.POST or None, office=office)
-    if request.method == "POST" and form.is_valid():
-        if request.POST.get("action") == "submit":
+    form = BallotForm(request.POST or None, election=election)
+    action = request.POST.get("action")
+    if request.method == "POST" and action in {"review", "finalize"} and form.is_valid():
+        if action == "finalize":
             try:
-                vote, _created = submit_vote(request.user, slug, form.cleaned_data["candidate"].pk,
-                                             form.cleaned_data["request_id"])
+                submit_ballot(request.user, form.choices(), form.cleaned_data["request_id"])
             except ElectionError as exc:
                 messages.error(request, str(exc))
                 return redirect("dashboard")
-            return redirect("receipt", receipt_id=vote.receipt_id)
-        return render(request, "elections/confirm.html", {"form": form, "office": office,
-            "candidate": form.cleaned_data["candidate"]})
-    return render(request, "elections/ballot.html", {"form": form, "office": office,
-        "candidates": office.candidates.all()})
+            # The kiosk is shared: end the session so the next voter starts at the login page.
+            logout(request)
+            return redirect("done")
+        return render(request, "elections/review.html", {"form": form, "election": election,
+            "picks": [{"office": office, "candidate": form.cleaned_data[f"office_{office.slug}"]}
+                      for office in form.offices]})
+    if action == "change":
+        form.errors.clear()  # returning to edit is not a failed submission
+    return render(request, "elections/ballot.html", {"form": form, "election": election})
 
 
-@login_required
 @never_cache
 @require_GET
-def receipt(request, receipt_id):
-    vote = get_object_or_404(Vote.objects.select_related("office", "candidate"),
-                             receipt_id=receipt_id, voter__user=request.user)
-    remaining = Office.objects.filter(election=vote.election).exclude(
-        pk__in=Vote.objects.filter(voter=vote.voter).values("office_id"))
-    return render(request, "elections/receipt.html", {"vote": vote, "remaining": remaining})
+def done(request):
+    return render(request, "elections/done.html")
 
 
 @never_cache

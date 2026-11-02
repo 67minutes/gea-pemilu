@@ -763,3 +763,71 @@ msgstr "Sesi berakhir dalam"
 
 msgid "Next session in"
 msgstr "Sesi berikutnya dalam"
+
+msgid "Choose a candidate for every office."
+msgstr "Pilih kandidat untuk setiap jabatan."
+
+msgid "Choose a candidate for this office."
+msgstr "Pilih kandidat untuk jabatan ini."
+
+msgid "Your ballot"
+msgstr "Surat suara Anda"
+
+msgid "Choose one candidate for each office"
+msgstr "Pilih satu kandidat untuk setiap jabatan"
+
+msgid "Nothing is submitted until you finalize on the review screen."
+msgstr ""
+"Belum ada yang dikirim sampai Anda memfinalisasi di layar pemeriksaan."
+
+msgid "Review ballot"
+msgstr "Periksa surat suara"
+
+msgid "Review your ballot"
+msgstr "Periksa surat suara Anda"
+
+msgid ""
+"After finalizing, you cannot change or delete these choices. You will be "
+"logged out."
+msgstr ""
+"Setelah difinalisasi, pilihan ini tidak dapat diubah atau dihapus. Anda akan"
+" otomatis keluar."
+
+msgid "Finalize ballot"
+msgstr "Finalisasi surat suara"
+
+msgid "Change choices"
+msgstr "Ubah pilihan"
+
+msgid "Vote recorded"
+msgstr "Suara tercatat"
+
+msgid "Thank you"
+msgstr "Terima kasih"
+
+msgid "Your vote is recorded"
+msgstr "Suara Anda telah tercatat"
+
+msgid ""
+"You have been logged out. This screen returns to the login page in 10 "
+"seconds."
+msgstr "Anda telah keluar. Layar ini kembali ke halaman masuk dalam 10 detik."
+
+msgid "Next voter"
+msgstr "Selesai"
+
+msgid "You have voted"
+msgstr "Anda sudah memilih"
+
+msgid "Ballot finalized"
+msgstr "Surat suara difinalisasi"
+
+msgid "Start voting"
+msgstr "Mulai memilih"
+
+msgid ""
+"We could not complete this request. Check your ballot status before "
+"finalizing again."
+msgstr ""
+"Permintaan ini tidak dapat diselesaikan. Periksa status surat suara Anda "
+"sebelum memfinalisasi lagi."

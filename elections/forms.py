@@ -8,7 +8,7 @@ from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 
 from .mail import enqueue, reset_allowed
-from .models import Candidate, Voter
+from .models import Voter
 
 
 class VoterLoginForm(AuthenticationForm):
@@ -24,13 +24,23 @@ class VoterLoginForm(AuthenticationForm):
 
 
 class BallotForm(forms.Form):
-    candidate = forms.ModelChoiceField(queryset=Candidate.objects.none(), label=_("Your choice"),
-                                       widget=forms.RadioSelect, empty_label=None)
+    """One required choice per office, reviewed together and finalized as one ballot."""
+
     request_id = forms.UUIDField(widget=forms.HiddenInput, initial=uuid.uuid4)
 
-    def __init__(self, *args, office, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["candidate"].queryset = office.candidates.all()
+    def __init__(self, data=None, *, election):
+        super().__init__(data)
+        self.offices = list(election.offices.all())
+        for office in self.offices:
+            self.fields[f"office_{office.slug}"] = forms.ModelChoiceField(
+                queryset=office.candidates.all(), label=str(office), widget=forms.RadioSelect, empty_label=None,
+                error_messages={"required": _("Choose a candidate for this office.")})
+
+    def sections(self):
+        return [{"office": office, "field": self[f"office_{office.slug}"]} for office in self.offices]
+
+    def choices(self):
+        return {office.slug: self.cleaned_data[f"office_{office.slug}"].pk for office in self.offices}
 
 
 class RosterForm(forms.Form):
