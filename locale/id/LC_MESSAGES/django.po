@@ -754,3 +754,12 @@ msgstr ""
 
 msgid "Add session"
 msgstr "Tambah sesi"
+
+msgid "Between sessions"
+msgstr "Di antara sesi"
+
+msgid "Session ends in"
+msgstr "Sesi berakhir dalam"
+
+msgid "Next session in"
+msgstr "Sesi berikutnya dalam"

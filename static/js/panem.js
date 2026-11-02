@@ -127,7 +127,8 @@
   // horn, a chase around the plates and sparks converging on the Cornucopia.
   function arena(p, host) {
     var opens = Date.parse(host.dataset.opens || ""), closes = Date.parse(host.dataset.closes || "");
-    var state = host.dataset.state || "idle";
+    // Between voting sessions the arena rests the same way it does while paused.
+    var state = host.dataset.state === "between" ? "paused" : host.dataset.state || "idle";
     var live = host.dataset.live === "true" && !reduced;
     var tip = null, timer = null;
 

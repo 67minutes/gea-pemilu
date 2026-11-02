@@ -52,7 +52,7 @@ p,li,dd{text-wrap:pretty}
 .arena-tip{position:absolute;left:50%;top:50%;width:.5rem;height:.5rem;margin:-.25rem 0 0 -.25rem;border-radius:50%;background:var(--bone);pointer-events:none;
   animation:breathe 1.6s ease-out infinite alternate}
 .is-offscreen .arena-tip{animation-play-state:paused}
-[data-state=paused] .arena-tip{animation:none;opacity:.5}
+[data-state=paused] .arena-tip,[data-state=between] .arena-tip{animation:none;opacity:.5}
 @keyframes breathe{to{opacity:.3}}
 /* Voter pages: the same arena, dimmed, as a fixed backdrop behind the ballot. body paints its own background
    (html has one too), which would cover a negative z-index, so the stage sits at base and the page rises above it. */
@@ -174,6 +174,14 @@ main{flex:1;display:flex;flex-direction:column;outline:none}
 [data-state=open] .dot{background:var(--gold);border-color:var(--gold)}
 [data-state=paused] .dot{border-color:var(--gold)}
 [data-state=closed] .dot{background:var(--stone-600);border-color:var(--stone-600)}
+[data-state=between] .dot{border-color:var(--gold)}
+.sessions{display:flex;flex-wrap:wrap;gap:var(--space-2) var(--space-6);margin:var(--space-3) 0 0;padding:0;list-style:none;font-variant-numeric:lining-nums tabular-nums}
+.sessions li{display:flex;flex-direction:column;gap:var(--space-1);padding-left:var(--space-3);border-left:1px solid var(--line)}
+.sessions li span{font-size:var(--text-xs);line-height:var(--leading-xs);color:var(--dust)}
+.sessions li strong{font-weight:400;font-size:var(--text-sm);line-height:var(--leading-sm)}
+.sessions li[aria-current]{border-left-color:var(--gold)}
+.sessions li.is-past{opacity:.55}
+.sessions abbr{text-decoration:none;color:var(--dust)}
 
 /* Gray placeholder portrait */
 .portrait{display:block;aspect-ratio:4/5;background:var(--stone-600) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 150'%3E%3Ccircle cx='60' cy='58' r='23' fill='%2378716c'/%3E%3Cpath d='M12 150c0-36 21-55 48-55s48 19 48 55z' fill='%2378716c'/%3E%3C/svg%3E") center bottom/78% no-repeat}
@@ -193,6 +201,8 @@ main{flex:1;display:flex;flex-direction:column;outline:none}
 .hero-copy{max-width:none;margin:0;padding-block:var(--space-12) var(--space-16)}
 .hero-copy>*{max-width:37.5rem}
 .hero-copy>.status{max-width:45rem;margin:var(--space-8) 0;background:var(--ink)}
+.hero-copy>.status:has(+.sessions){margin-bottom:0;border-bottom:0}
+.hero-copy>.sessions{max-width:45rem;margin:0 0 var(--space-8);padding:var(--space-3) 0 var(--space-4);border-bottom:1px solid var(--line);background:var(--ink)}
 .hero-title{display:flex;flex-direction:column;margin:0 0 var(--space-6)}
 .hero-word{font-family:var(--display);font-style:italic;font-weight:300;font-size:var(--text-8xl);line-height:1}
 .hero-org{margin-top:var(--space-3);font-family:var(--display);font-weight:500;font-size:var(--text-2xl);line-height:var(--leading-2xl);color:var(--gold)}

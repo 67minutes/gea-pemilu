@@ -1,13 +1,22 @@
-{% load i18n tz %}
+{% load i18n tz %}{% with current=election.current_window upcoming=election.next_window %}
 <div class="status" data-state="{{ election.state }}">
   <p class="status-cell"><span>{% translate "Status" %}</span><strong><i class="dot" aria-hidden="true"></i>
-    {% if election.state == 'open' %}{% translate "Voting open" %}{% elif election.state == 'closed' %}{% translate "Voting closed" %}{% elif election.state == 'paused' %}{% translate "Voting paused" %}{% else %}{% translate "Not open yet" %}{% endif %}
+    {% if election.state == 'open' %}{% translate "Voting open" %}{% elif election.state == 'closed' %}{% translate "Voting closed" %}{% elif election.state == 'paused' %}{% translate "Voting paused" %}{% elif election.state == 'between' %}{% translate "Between sessions" %}{% else %}{% translate "Not open yet" %}{% endif %}
   </strong></p>
-  <p class="status-cell"><span>{% translate "Opens" %}</span><strong>{{ election.opens_at|localtime|date:"d M Y, H:i" }}</strong></p>
-  <p class="status-cell"><span>{% translate "Closes" %}</span><strong>{{ election.closes_at|localtime|date:"d M Y, H:i" }}</strong></p>
-  {% if election.state == 'open' or election.state == 'paused' %}
-  <p class="status-cell"><span>{% translate "Closes in" %}</span><strong class="clock" data-countdown="{{ election.closes_at|date:'c' }}">{{ election.closes_at|timeuntil }}</strong></p>
-  {% elif election.state == 'scheduled' %}
-  <p class="status-cell"><span>{% translate "Opens in" %}</span><strong class="clock" data-countdown="{{ election.opens_at|date:'c' }}">{{ election.opens_at|timeuntil }}</strong></p>
+  {% if current and election.state != 'closed' %}
+  <p class="status-cell"><span>{% translate "Session ends in" %}</span><strong class="clock" data-countdown="{{ current.ends_at|date:'c' }}">{{ current.ends_at|timeuntil }}</strong></p>
+  {% elif upcoming and election.state != 'closed' and election.state != 'draft' %}
+  <p class="status-cell"><span>{% translate "Next session in" %}</span><strong class="clock" data-countdown="{{ upcoming.starts_at|date:'c' }}">{{ upcoming.starts_at|timeuntil }}</strong></p>
   {% endif %}
 </div>
+{% if election.windows.all %}
+<ol class="sessions" aria-label="{% translate 'Voting sessions' %}">
+  {% for window in election.windows.all %}
+  <li{% if window == current %} aria-current="true"{% elif window.ends_at <= now %} class="is-past"{% endif %}>
+    <span>{{ window.starts_at|localtime|date:"D, d M Y" }}</span>
+    <strong class="mono">{{ window.starts_at|localtime|date:"H:i" }}–{% if window.ends_at|localtime|date:"Ymd" != window.starts_at|localtime|date:"Ymd" %}{{ window.ends_at|localtime|date:"d M, " }}{% endif %}{{ window.ends_at|localtime|date:"H:i" }} <abbr>WIB</abbr></strong>
+  </li>
+  {% endfor %}
+</ol>
+{% endif %}
+{% endwith %}

@@ -282,6 +282,15 @@ def request_credentials(actor):
     audit(actor, "credentials.requested")
 
 
+def session_lines(election):
+    lines = []
+    for window in election.windows.all():
+        start, end = timezone.localtime(window.starts_at), timezone.localtime(window.ends_at)
+        until = f"{end:%H:%M}" if end.date() == start.date() else f"{end:%d %b %Y, %H:%M}"
+        lines.append(f"• {start:%d %b %Y, %H:%M}–{until} WIB\n")
+    return "".join(lines)
+
+
 def issue_credentials(actor, limit=10):
     """Background-only issuance: expensive hashes run outside the election lock."""
     from .mail import enqueue
@@ -307,8 +316,10 @@ def issue_credentials(actor, limit=10):
                 'Pemilu HMTG "GEA" ITB\n\n'
                 f"NIM: {voter.user.username}\nPassword: {password}\n"
                 f"Login: {settings.PUBLIC_BASE_URL}/login/\n\n"
-                f"Mulai / Opens (WIB): {timezone.localtime(election.opens_at):%d %b %Y %H:%M}\n"
-                f"Selesai / Closes (WIB): {timezone.localtime(election.closes_at):%d %b %Y %H:%M}\n\n"
+                "Sesi pemungutan suara / Voting sessions (WIB):\n"
+                f"{session_lines(election)}\n"
+                "Pemungutan suara dilakukan langsung di laptop panitia. / "
+                "Voting is in person on the committee laptops.\n\n"
                 "Rahasiakan password ini. Pilihan Anda terhubung dengan NIM dan hanya dapat ditinjau "
                 "oleh peninjau berwenang setelah pemilu berakhir. Setiap suara bersifat final.\n\n"
                 "Keep this password private. Your choices are linked to your NIM and may be reviewed "

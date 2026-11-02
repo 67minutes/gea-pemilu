@@ -2,6 +2,7 @@ from datetime import timedelta
 
 import pytest
 from django.urls import reverse
+from django.utils import timezone
 
 from elections.views import COMMITTEE, COMMITTEE_CHAIR
 
@@ -47,3 +48,45 @@ def test_voting_pages_carry_the_arena_backdrop(client, make_election):
         page = client.get(url).content.decode()
         assert 'class="voting-art" data-scene="arena" data-live="true"' in page
         assert f'data-state="{election.state}"' in page
+
+
+def session_range(window):
+    from django.utils import timezone
+
+    return f"{timezone.localtime(window.starts_at):%H:%M}–{timezone.localtime(window.ends_at):%H:%M}"
+
+
+def test_schedule_lists_sessions_and_next_opening(client, make_election):
+    from tests.test_windows import H, build
+
+    election, _c, _v = build(make_election, (-2 * H, -H), (H, 2 * H))
+    ended, upcoming = election.windows.all()
+    page = client.get("/").content.decode()
+    assert session_range(ended) in page and session_range(upcoming) in page
+    assert 'data-state="between"' in page
+    assert f'data-countdown="{timezone.localtime(upcoming.starts_at).isoformat()}"' in page
+
+
+def test_schedule_counts_down_to_the_current_session_end(client, make_election):
+    from tests.test_windows import H, build
+
+    election, _c, _v = build(make_election, (-H, H), (3 * H, 4 * H))
+    current = election.windows.first()
+    page = client.get("/").content.decode()
+    assert f'data-countdown="{timezone.localtime(current.ends_at).isoformat()}"' in page
+
+
+def test_credentials_email_lists_every_session(make_election):
+    import json
+
+    from elections.mail import cipher
+    from elections.models import EmailDelivery
+    from elections.services import issue_credentials
+    from tests.test_windows import H, build
+
+    election, _c, _v = build(make_election, (H, 2 * H), (25 * H, 26 * H))
+    issue_credentials(None)
+    body = json.loads(cipher().decrypt(EmailDelivery.objects.get().encrypted_payload.encode()))["text"]
+    for window in election.windows.all():
+        assert session_range(window) in body
+    assert "Selesai / Closes" not in body and "langsung di laptop panitia" in body
