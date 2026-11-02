@@ -14,6 +14,8 @@ services:
     region: singapore
     plan: starter
     numInstances: 1
+    domains:
+      - pemilugea.com
     autoDeployTrigger: "off"
     healthCheckPath: /health/ready/
     preDeployCommand: python scripts/release.py
@@ -32,11 +34,11 @@ services:
       - key: TRUST_PROXY
         value: "true"
       - key: PUBLIC_BASE_URL
-        sync: false
+        value: https://pemilugea.com
       - key: ALLOWED_HOSTS
-        sync: false
+        value: pemilugea.com,www.pemilugea.com
       - key: CSRF_TRUSTED_ORIGINS
-        sync: false
+        value: https://pemilugea.com,https://www.pemilugea.com
       - key: EMAIL_TRANSPORT
         value: gmail
       - key: DEFAULT_FROM_EMAIL

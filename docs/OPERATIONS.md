@@ -15,11 +15,11 @@ Publishing requires a GitHub/GitLab/Bitbucket repository and a connected Render 
    create very little load; the managed database, not the web size, holds the election record. The shared `gea-secrets` group generates `SECRET_KEY` and
    `OUTBOX_KEY` once for both web and cron. Confirm Render-generated `OUTBOX_KEY` is URL-safe base64
    for 32 bytes; if not, replace it with a Fernet-generated key before queueing any messages.
-4. Fill launch inputs in the web service: `PUBLIC_BASE_URL` (HTTPS origin), `ALLOWED_HOSTS`
-   (hostnames without schemes), `CSRF_TRUSTED_ORIGINS` (HTTPS origins), `DEFAULT_FROM_EMAIL`
+4. The Blueprint sets `PUBLIC_BASE_URL=https://pemilugea.com`, allows `pemilugea.com` and
+   `www.pemilugea.com`, and trusts both HTTPS origins for CSRF. Fill the remaining launch inputs: `DEFAULT_FROM_EMAIL`
    (the committee Gmail address, e.g. `Panitia Pemilu GEA <pemilu.gea@gmail.com>`), `EMAIL_HOST_USER`,
    `EMAIL_HOST_PASSWORD` (the Gmail app password), and the exact `ITB_EMAIL_DOMAINS` allowlist.
-   The free `*.onrender.com` address is enough; no domain purchase is needed.
+   The custom domain must be owned and its DNS configured as described below.
    Cron references web email settings; deployment will fail if they are missing. Never replace
    `OUTBOX_KEY` while messages are queued: their encrypted content requires the original key.
 5. Set up the committee Gmail (see **Committee Gmail** below), then run
@@ -36,6 +36,25 @@ With it, login throttling keys on the client address Render's proxy appends to `
 (`TRUSTED_PROXY_HOPS=1`). Raise the hop count only if another proxy or CDN is placed in front of Render.
 Database public networking is disabled by default. Use the Render shell or explicitly allow only
 your operator IP temporarily for backup/recovery; remove that access afterward.
+
+### pemilugea.com DNS and HTTPS
+
+The Blueprint attaches `pemilugea.com` to the web service. Render automatically adds
+`www.pemilugea.com` with a redirect to the root domain. Copy the exact `*.onrender.com`
+hostname from the deployed service; the service name alone does not guarantee that hostname.
+
+- At a DNS provider with ALIAS/ANAME support, point the root (`@`) at that Render hostname.
+  Otherwise, set an `A` record for `@` to Render's load balancer, `216.24.57.1`.
+- Set `www` as a `CNAME` to the same Render hostname. Cloudflare requires a flattened
+  `CNAME` at the root as well; use its provider-specific instructions.
+- Remove conflicting web-hosting `A`/`AAAA` records for these hostnames. Preserve unrelated
+  mail and domain-verification records.
+- In Render's Custom Domains settings, verify both domains and wait for managed TLS
+  certificates. Confirm `https://pemilugea.com/health/ready/` returns 200 and
+  `https://www.pemilugea.com/` redirects to the root before announcing the site.
+
+See Render's [custom domains](https://render.com/docs/custom-domains) and
+[DNS configuration](https://render.com/docs/configure-other-dns) instructions.
 
 ## Committee Gmail
 
