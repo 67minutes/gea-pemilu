@@ -6,7 +6,8 @@ DECLARE e elections_election%ROWTYPE;
 BEGIN
   IF TG_OP <> 'INSERT' THEN RAISE EXCEPTION 'Votes are immutable'; END IF;
   SELECT * INTO e FROM elections_election WHERE id=NEW.election_id FOR UPDATE;
-  IF e.activated_at IS NULL OR e.paused OR e.result_snapshot IS NOT NULL OR NOT EXISTS (
+  IF e.activated_at IS NULL OR e.paused OR e.result_snapshot IS NOT NULL
+     OR e.closes_at IS NULL OR clock_timestamp() >= e.closes_at OR NOT EXISTS (
     SELECT 1 FROM elections_votingwindow w WHERE w.election_id = e.id
       AND clock_timestamp() >= w.starts_at AND clock_timestamp() < w.ends_at
   ) THEN
@@ -33,7 +34,7 @@ BEGIN
     IF TG_OP = 'DELETE' THEN RAISE EXCEPTION 'Activated election cannot be deleted'; END IF;
     IF (OLD.name, OLD.opens_at, OLD.activated_at) IS DISTINCT FROM (NEW.name, NEW.opens_at, NEW.activated_at)
        OR (NEW.closes_at IS DISTINCT FROM OLD.closes_at
-           AND NOT (NEW.closes_at > OLD.closes_at AND OLD.closes_at > clock_timestamp())) THEN
+           AND NOT COALESCE(NEW.closes_at > OLD.closes_at AND OLD.closes_at > clock_timestamp(), false)) THEN
       RAISE EXCEPTION 'Activated election configuration is frozen';
     END IF;
   END IF;
@@ -42,7 +43,8 @@ BEGIN
        (OLD.result_snapshot, OLD.finalized_at) IS DISTINCT FROM (NEW.result_snapshot, NEW.finalized_at) THEN
       RAISE EXCEPTION 'Final results are immutable';
     END IF;
-    IF NEW.result_snapshot IS NOT NULL AND (NEW.activated_at IS NULL OR clock_timestamp() < NEW.closes_at) THEN
+    IF NEW.result_snapshot IS NOT NULL
+       AND (NEW.activated_at IS NULL OR NEW.closes_at IS NULL OR clock_timestamp() < NEW.closes_at) THEN
       RAISE EXCEPTION 'Results unavailable before closing';
     END IF;
   END IF;
@@ -59,7 +61,10 @@ BEGIN
     WHERE id = CASE WHEN TG_OP = 'DELETE' THEN OLD.election_id ELSE NEW.election_id END FOR UPDATE;
   IF e.activated_at IS NOT NULL THEN
     IF TG_OP = 'DELETE' THEN RAISE EXCEPTION 'Activated voting sessions cannot be removed'; END IF;
-    IF TG_OP = 'INSERT' AND NOT (NEW.starts_at > clock_timestamp() AND NEW.starts_at >= e.opens_at) THEN
+    IF e.closes_at IS NULL OR clock_timestamp() >= e.closes_at OR e.result_snapshot IS NOT NULL THEN
+      RAISE EXCEPTION 'Voting sessions of a closed election cannot change';
+    END IF;
+    IF TG_OP = 'INSERT' AND NOT COALESCE(NEW.starts_at > clock_timestamp() AND NEW.starts_at >= e.opens_at, false) THEN
       RAISE EXCEPTION 'New voting sessions must start in the future';
     END IF;
     IF TG_OP = 'UPDATE' AND NOT (NEW.election_id = OLD.election_id AND NEW.starts_at = OLD.starts_at
@@ -75,16 +80,19 @@ CREATE TRIGGER gea_window_guard BEFORE INSERT OR UPDATE OR DELETE ON elections_v
 """
 
 # Bodies from 0002_database_guards, restored on reverse.
-OLD_VOTE_GUARD = VOTE_GUARD.replace("""OR NOT EXISTS (
+OLD_VOTE_GUARD = VOTE_GUARD.replace("""
+     OR e.closes_at IS NULL OR clock_timestamp() >= e.closes_at OR NOT EXISTS (
     SELECT 1 FROM elections_votingwindow w WHERE w.election_id = e.id
       AND clock_timestamp() >= w.starts_at AND clock_timestamp() < w.ends_at
   ) THEN""", """
      OR clock_timestamp() < e.opens_at OR clock_timestamp() >= e.closes_at THEN""")
 OLD_ELECTION_GUARD = ELECTION_GUARD.replace("""    IF (OLD.name, OLD.opens_at, OLD.activated_at) IS DISTINCT FROM (NEW.name, NEW.opens_at, NEW.activated_at)
        OR (NEW.closes_at IS DISTINCT FROM OLD.closes_at
-           AND NOT (NEW.closes_at > OLD.closes_at AND OLD.closes_at > clock_timestamp())) THEN""",
+           AND NOT COALESCE(NEW.closes_at > OLD.closes_at AND OLD.closes_at > clock_timestamp(), false)) THEN""",
 """    IF (OLD.name, OLD.opens_at, OLD.closes_at, OLD.activated_at) IS DISTINCT FROM
-       (NEW.name, NEW.opens_at, NEW.closes_at, NEW.activated_at) THEN""")
+       (NEW.name, NEW.opens_at, NEW.closes_at, NEW.activated_at) THEN""").replace("""    IF NEW.result_snapshot IS NOT NULL
+       AND (NEW.activated_at IS NULL OR NEW.closes_at IS NULL OR clock_timestamp() < NEW.closes_at) THEN""",
+"""    IF NEW.result_snapshot IS NOT NULL AND (NEW.activated_at IS NULL OR clock_timestamp() < NEW.closes_at) THEN""")
 
 
 def install(apps, schema_editor):

@@ -112,16 +112,41 @@ def request_reset(client, voter):
     return client.post(reverse("password_reset"), {"email": voter.user.email})
 
 
-def test_reset_requests_capped_per_voter(client, make_election):
+def test_reset_requests_have_a_per_voter_cooldown(client, make_election):
     _e, _o, _c, v = make_election()
     Voter.objects.filter(pk=v[0].pk).update(credentials_issued_at=timezone.now())
     for _ in range(3):
         request_reset(client, v[0])
-    assert EmailDelivery.objects.filter(kind="reset").count() == 1  # one pending at a time
-    for _ in range(4):
-        EmailDelivery.objects.filter(kind="reset", status="pending").update(status="sent", sent_at=timezone.now())
-        request_reset(client, v[0])
-    assert EmailDelivery.objects.filter(kind="reset").count() == 3  # three per rolling day
+    assert EmailDelivery.objects.filter(kind="reset").count() == 1
+    EmailDelivery.objects.update(created_at=timezone.now() - timedelta(minutes=11))
+    request_reset(client, v[0])  # an older request, sent or still pending, never locks the voter out
+    assert EmailDelivery.objects.filter(kind="reset").count() == 2
+
+
+def test_reset_jobs_expire_with_their_link(make_election):
+    from elections.services import cleanup_expired_payloads
+
+    _e, _o, _c, v = make_election()
+    stale = enqueue(v[0].user, "reset", "Reset", "body")
+    fresh = enqueue(v[0].user, "reset", "Reset", "body")
+    credentials = enqueue(v[0].user, "credentials", "Credentials", "body")
+    EmailDelivery.objects.filter(pk__in=[stale.pk, credentials.pk]).update(
+        created_at=timezone.now() - timedelta(minutes=61))
+    cleanup_expired_payloads()
+    assert set(EmailDelivery.objects.filter(status="pending").values_list("pk", flat=True)) == {
+        fresh.pk, credentials.pk}
+
+
+def test_pending_resets_do_not_hold_back_credentials(settings, make_election):
+    _e, _o, _c, v = make_election(voter_count=6)
+    for voter in v[:3]:
+        Voter.objects.filter(pk=voter.pk).update(credentials_issued_at=timezone.now())
+        enqueue(voter.user, "reset", "Reset", "body")
+    request_credentials(None)
+    settings.EMAIL_DAILY_LIMIT = 6
+    settings.EMAIL_RESET_RESERVE = 2
+    call_command("process_outbox", limit=0)
+    assert EmailDelivery.objects.filter(kind="credentials").count() == 3
 
 
 def test_no_reset_email_before_credentials_are_issued(client, make_election):

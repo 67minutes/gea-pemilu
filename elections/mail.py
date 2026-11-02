@@ -25,15 +25,17 @@ def enqueue(user, kind, subject, body):
                                         encrypted_payload=cipher().encrypt(json.dumps(payload).encode()).decode())
 
 
-RESETS_PER_USER_PER_DAY = 3
+RESET_COOLDOWN = timedelta(minutes=10)
 
 
 def reset_allowed(user):
-    """Reset requests are public, so bound them per voter: they share the daily sending budget."""
-    if not user.voter.credentials_issued_at:
-        return False
-    recent = EmailDelivery.objects.filter(user=user, kind="reset", created_at__gte=timezone.now() - timedelta(hours=24))
-    return not recent.filter(status="pending").exists() and recent.count() < RESETS_PER_USER_PER_DAY
+    """Reset requests are public and share the sending budget: one per voter per cooldown.
+
+    A cooldown rather than a daily quota, so nobody can use up a voter's resets for the day.
+    Call with the voter row locked.
+    """
+    return bool(user.voter.credentials_issued_at) and not EmailDelivery.objects.filter(
+        user=user, kind="reset", created_at__gte=timezone.now() - RESET_COOLDOWN).exists()
 
 
 def sent_in_last_day():

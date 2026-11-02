@@ -174,3 +174,28 @@ def test_postgres_window_guards(make_election):
             operation()
     VotingWindow.objects.filter(pk=upcoming.pk).update(ends_at=upcoming.ends_at + H)
     Election.objects.filter(pk=election.pk).update(closes_at=upcoming.ends_at + H)
+
+
+def test_postgres_guards_fail_closed_on_null_and_after_close(make_election):
+    if connection.vendor != "postgresql":
+        pytest.skip("PostgreSQL trigger test")
+    election, _c, _v = build(make_election, (-2 * H, -H))
+    for operation in [
+        lambda: Election.objects.filter(pk=election.pk).update(closes_at=None),
+        lambda: VotingWindow.objects.create(election=election, starts_at=timezone.now() + H,
+                                            ends_at=timezone.now() + 2 * H),
+    ]:
+        with pytest.raises(DatabaseError), transaction.atomic():
+            operation()
+
+
+def test_no_votes_after_closes_at_even_inside_a_window(make_election):
+    election, candidates, voters = build(make_election, (-H, H), active=False)
+    now = timezone.now()
+    Election.objects.filter(pk=election.pk).update(closes_at=now - timedelta(minutes=1), activated_at=now)
+    election.refresh_from_db()
+    assert not is_voting_open(election, timezone.now())
+    if connection.vendor == "postgresql":
+        with pytest.raises(DatabaseError), transaction.atomic():
+            Vote.objects.create(election=election, voter=voters[0], office=candidates["kahim"][0].office,
+                                candidate=candidates["kahim"][0], submitted_at=now, request_id=uuid.uuid4())

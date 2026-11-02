@@ -4,10 +4,11 @@ from urllib.parse import urlparse
 from django import forms
 from django.conf import settings
 from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
+from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 
 from .mail import enqueue, reset_allowed
-from .models import Candidate
+from .models import Candidate, Voter
 
 
 class VoterLoginForm(AuthenticationForm):
@@ -59,6 +60,9 @@ class ApprovedPasswordResetForm(PasswordResetForm):
                   html_email_template_name=None):
         from django.template.loader import render_to_string
 
-        if reset_allowed(context["user"]):
-            enqueue(context["user"], "reset", "GEA ITB — Reset password / Password reset",
-                    render_to_string(email_template_name, context))
+        user = context["user"]
+        with transaction.atomic():
+            Voter.objects.select_for_update().get(user=user)  # serializes the cooldown check per voter
+            if reset_allowed(user):
+                enqueue(user, "reset", "GEA ITB — Reset password / Password reset",
+                        render_to_string(email_template_name, context))

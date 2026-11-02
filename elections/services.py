@@ -64,7 +64,7 @@ def activate(actor):
 
 
 def is_voting_open(election, now):
-    return bool(election.activated_at and not election.paused
+    return bool(election.activated_at and not election.paused and election.closes_at and now < election.closes_at
                 and election.windows.filter(starts_at__lte=now, ends_at__gt=now).exists())
 
 
@@ -343,5 +343,10 @@ def delivery_summary():
 def cleanup_expired_payloads():
     from .models import EmailDelivery
 
-    return EmailDelivery.objects.filter(status="pending", created_at__lt=timezone.now() - timedelta(hours=23)).update(
+    now = timezone.now()
+    # A reset link dies after PASSWORD_RESET_TIMEOUT, so an unsent reset is worthless after that too.
+    stale_resets = EmailDelivery.objects.filter(
+        status="pending", kind="reset", created_at__lt=now - timedelta(seconds=settings.PASSWORD_RESET_TIMEOUT))
+    expired = stale_resets.update(status="failed", encrypted_payload="", last_error="Reset link expired before sending")
+    return expired + EmailDelivery.objects.filter(status="pending", created_at__lt=now - timedelta(hours=23)).update(
         status="failed", encrypted_payload="", last_error="Expired; initiate a password reset")

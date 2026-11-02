@@ -23,7 +23,7 @@ class Command(BaseCommand):
             # Queue only what today's budget can send, so credentials never wait into the 23h expiry.
             budget = remaining_daily_budget()
             limit = 10 if budget is None else min(10, budget - settings.EMAIL_RESET_RESERVE
-                                                  - EmailDelivery.objects.filter(status="pending").count())
+                                                  - EmailDelivery.objects.filter(kind="credentials", status="pending").count())
             if limit > 0:
                 issue_credentials(None, limit=limit)
         count = 0
