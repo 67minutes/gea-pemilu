@@ -4,7 +4,7 @@ from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 from django_otp.admin import OTPAdminAuthenticationForm, OTPAdminSite
 
-from .models import AuditEvent, Candidate, Election, EmailDelivery, Office, Voter
+from .models import AuditEvent, Candidate, Election, EmailDelivery, Office, Voter, VotingWindow
 from .services import audit
 
 site = OTPAdminSite(name="committee_admin")
@@ -60,10 +60,33 @@ class ConfigurationAdmin(admin.ModelAdmin):
         return super().log_change(request, obj, message)
 
 
+class VotingWindowInline(admin.TabularInline):
+    """Sessions are managed on the committee page, which enforces the activation rules."""
+
+    model = VotingWindow
+    fields = ["__str__"]
+    readonly_fields = ["__str__"]
+    extra = 0
+
+    def has_view_permission(self, request, obj=None):
+        return True  # the election change page itself is permission-gated
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
 @admin.register(Election, site=site)
 class ElectionAdmin(ConfigurationAdmin):
     fields = ["name", "opens_at", "closes_at"]
+    readonly_fields = ["opens_at", "closes_at"]
     list_display = ["name", "opens_at", "closes_at", "activated_at", "paused"]
+    inlines = [VotingWindowInline]
 
 
 @admin.register(Office, site=site)

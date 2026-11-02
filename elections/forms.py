@@ -66,3 +66,13 @@ class ApprovedPasswordResetForm(PasswordResetForm):
             if reset_allowed(user):
                 enqueue(user, "reset", "GEA ITB — Reset password / Password reset",
                         render_to_string(email_template_name, context))
+
+
+class WindowForm(forms.Form):
+    """A voting session in WIB; datetime-local values are read in the current (Asia/Jakarta) timezone."""
+
+    window_id = forms.IntegerField(required=False, widget=forms.HiddenInput)
+    starts_at = forms.DateTimeField(label=_("Starts"), required=False, input_formats=["%Y-%m-%dT%H:%M"],
+                                    widget=forms.DateTimeInput(attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"))
+    ends_at = forms.DateTimeField(label=_("Ends"), input_formats=["%Y-%m-%dT%H:%M"],
+                                  widget=forms.DateTimeInput(attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"))

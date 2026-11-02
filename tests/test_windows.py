@@ -1,5 +1,6 @@
 import uuid
-from datetime import timedelta
+from datetime import datetime, timedelta
+from datetime import timezone as dt_timezone
 from unittest.mock import patch
 
 import pytest
@@ -199,3 +200,66 @@ def test_no_votes_after_closes_at_even_inside_a_window(make_election):
         with pytest.raises(DatabaseError), transaction.atomic():
             Vote.objects.create(election=election, voter=voters[0], office=candidates["kahim"][0].office,
                                 candidate=candidates["kahim"][0], submitted_at=now, request_id=uuid.uuid4())
+
+
+def window_post(client, **data):
+    from django.urls import reverse
+
+    return client.post(reverse("committee_action"), data, follow=True)
+
+
+def test_committee_adds_and_removes_windows_before_activation(make_election, staff_client):
+    build(make_election, active=False)
+    _user, client, _device = staff_client()
+    response = window_post(client, action="add_window", starts_at="2026-12-01T09:00", ends_at="2026-12-01T15:00")
+    assert response.status_code == 200
+    window = VotingWindow.objects.get()
+    assert window.starts_at == datetime(2026, 12, 1, 2, 0, tzinfo=dt_timezone.utc)
+    page = client.get("/committee/").content.decode()
+    assert "09:00–15:00" in page
+    window_post(client, action="remove_window", window_id=window.pk)
+    assert not VotingWindow.objects.exists()
+
+
+def test_committee_extends_a_running_window(make_election, staff_client):
+    election, _c, _v = build(make_election, (-H, H))
+    window = election.windows.get()
+    _user, client, _device = staff_client()
+    later = timezone.localtime(window.ends_at + H).strftime("%Y-%m-%dT%H:%M")
+    window_post(client, action="extend_window", window_id=window.pk, ends_at=later)
+    window.refresh_from_db()
+    assert timezone.localtime(window.ends_at).strftime("%Y-%m-%dT%H:%M") == later
+
+
+def test_committee_window_errors_are_messages_not_500(make_election, staff_client):
+    build(make_election, (2 * H, 3 * H), active=False)
+    window = VotingWindow.objects.get()
+    _user, client, _device = staff_client()
+    start = timezone.localtime(window.starts_at + H / 2).strftime("%Y-%m-%dT%H:%M")
+    end = timezone.localtime(window.ends_at + H).strftime("%Y-%m-%dT%H:%M")
+    response = window_post(client, action="add_window", starts_at=start, ends_at=end)
+    assert response.status_code == 200 and "overlap" in response.content.decode()
+    response = window_post(client, action="add_window", starts_at="not a date", ends_at=end)
+    assert response.status_code == 200 and VotingWindow.objects.count() == 1
+
+
+def test_committee_window_actions_need_operate_permission(make_election, staff_client):
+    build(make_election, active=False)
+    _user, client, _device = staff_client(operate=False)
+    from django.urls import reverse
+
+    response = client.post(reverse("committee_action"), {
+        "action": "add_window", "starts_at": "2026-12-01T09:00", "ends_at": "2026-12-01T15:00"})
+    assert response.status_code == 403 and not VotingWindow.objects.exists()
+
+
+def test_admin_shows_sessions_read_only(make_election, staff_client):
+    from django.contrib.auth.models import Permission
+
+    election, _c, _v = build(make_election, (H, 2 * H), active=False)
+    user, client, _device = staff_client()
+    user.user_permissions.add(*Permission.objects.filter(codename__in=["change_election", "view_election"]))
+    page = client.get(f"/committee/admin/elections/election/{election.pk}/change/").content.decode()
+    assert 'name="name"' in page and 'name="opens_at"' not in page
+    assert "windows-0-starts_at" not in page  # sessions are listed, never edited here
+    assert str(election.windows.get()) in page

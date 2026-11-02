@@ -9,21 +9,25 @@ from django.db import connection
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
-from .forms import BallotForm, RosterForm, VoterLoginForm
+from .forms import BallotForm, RosterForm, VoterLoginForm, WindowForm
 from .models import AuditEvent, Election, EmailDelivery, Office, Vote, Voter
 from .services import (
     ElectionError,
     activate,
+    add_window,
     audit,
     delivery_summary,
+    extend_window,
     finalize_results,
     import_roster,
     parse_roster,
     published_results,
+    remove_window,
     request_credentials,
     revoke_access,
     set_paused,
@@ -159,7 +163,22 @@ def committee(request):
         "failed_deliveries": EmailDelivery.objects.filter(status="failed").select_related("user")[:100],
         "can_operate": request.user.has_perm("elections.operate_election"),
         "can_review": request.user.has_perm("elections.review_ballots"),
-        "voters": Voter.objects.select_related("user").order_by("user__username")})
+        "voters": Voter.objects.select_related("user").order_by("user__username"),
+        "windows": election.windows.all() if election else [], "now": timezone.now(),
+        "window_form": WindowForm()})
+
+
+def window_action(request, action):
+    form = WindowForm(request.POST)
+    if not form.is_valid():
+        raise ElectionError(_("Enter a valid date and time for the voting session."))
+    data = form.cleaned_data
+    if action == "add_window":
+        if not data["starts_at"]:
+            raise ElectionError(_("Enter a valid date and time for the voting session."))
+        add_window(request.user, data["starts_at"], data["ends_at"])
+    elif action == "extend_window":
+        extend_window(request.user, data["window_id"], data["ends_at"])
 
 
 @committee_required("elections.operate_election")
@@ -195,6 +214,13 @@ def committee_action(request):
             activate(request.user)
         elif action in {"pause", "resume"}:
             set_paused(request.user, action == "pause")
+        elif action in {"add_window", "extend_window"}:
+            window_action(request, action)
+        elif action == "remove_window":
+            window_id = request.POST.get("window_id", "")
+            if not window_id.isdigit():
+                raise ElectionError(_("Invalid voting session."))
+            remove_window(request.user, int(window_id))
         elif action == "credentials":
             request_credentials(request.user)
             messages.success(request, _("Credential generation is queued. Check delivery status shortly."))

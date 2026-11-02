@@ -669,3 +669,88 @@ msgstr "Hubungi helpdesk"
 
 msgid "Having trouble with your ballot?"
 msgstr "Ada kendala dengan surat suara?"
+
+msgid "Voting session"
+msgstr "Sesi pemungutan suara"
+
+msgid "Voting sessions"
+msgstr "Sesi pemungutan suara"
+
+msgid "Starts at"
+msgstr "Waktu mulai"
+
+msgid "Ends at"
+msgstr "Waktu selesai"
+
+msgid "Starts"
+msgstr "Mulai"
+
+msgid "Ends"
+msgstr "Selesai"
+
+msgid "Add at least one voting window before activating."
+msgstr "Tambahkan minimal satu sesi pemungutan suara sebelum aktivasi."
+
+msgid "The election has closed; voting sessions can no longer change."
+msgstr "Pemilu sudah ditutup; sesi pemungutan suara tidak dapat diubah lagi."
+
+msgid "A voting session must end after it starts."
+msgstr "Sesi pemungutan suara harus berakhir setelah dimulai."
+
+msgid "Voting sessions cannot overlap."
+msgstr "Sesi pemungutan suara tidak boleh tumpang tindih."
+
+msgid ""
+"After activation, new sessions must start in the future and after the first "
+"session."
+msgstr ""
+"Setelah aktivasi, sesi baru harus dimulai di masa depan dan setelah sesi "
+"pertama."
+
+msgid "Invalid voting session."
+msgstr "Sesi pemungutan suara tidak valid."
+
+msgid ""
+"After activation, only a session that has not ended can be extended to a "
+"later end."
+msgstr ""
+"Setelah aktivasi, hanya sesi yang belum berakhir yang dapat diperpanjang ke "
+"waktu selesai yang lebih akhir."
+
+msgid "Voting sessions cannot be removed after activation."
+msgstr "Sesi pemungutan suara tidak dapat dihapus setelah aktivasi."
+
+msgid "Enter a valid date and time for the voting session."
+msgstr "Masukkan tanggal dan waktu yang valid untuk sesi pemungutan suara."
+
+msgid ""
+"After activation you can add future sessions or extend a session that has "
+"not ended. Sessions cannot be removed."
+msgstr ""
+"Setelah aktivasi, Anda dapat menambah sesi mendatang atau memperpanjang sesi"
+" yang belum berakhir. Sesi tidak dapat dihapus."
+
+msgid "Times are in WIB. Sessions cannot overlap."
+msgstr "Waktu dalam WIB. Sesi tidak boleh tumpang tindih."
+
+msgid "Session"
+msgstr "Sesi"
+
+msgid "Time (WIB)"
+msgstr "Waktu (WIB)"
+
+msgid "Remove"
+msgstr "Hapus"
+
+msgid "New end"
+msgstr "Waktu selesai baru"
+
+msgid "Extend end"
+msgstr "Perpanjang"
+
+msgid "No voting sessions yet. Add at least one before activating."
+msgstr ""
+"Belum ada sesi pemungutan suara. Tambahkan minimal satu sebelum aktivasi."
+
+msgid "Add session"
+msgstr "Tambah sesi"

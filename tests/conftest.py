@@ -2,7 +2,10 @@ from datetime import timedelta
 
 import pytest
 from cryptography.fernet import Fernet
+from django.contrib.auth.models import Permission
+from django.test import Client
 from django.utils import timezone
+from django_otp.plugins.otp_totp.models import TOTPDevice
 
 from elections.models import Candidate, Election, Office, User, Voter, VotingWindow
 from elections.services import sync_envelope
@@ -42,4 +45,22 @@ def make_election():
             election.activated_at = timezone.now()
             election.save(update_fields=["activated_at"])
         return election, offices, candidates, voters
+    return make
+
+
+@pytest.fixture
+def staff_client():
+    """Committee member with a verified OTP session: (user, client, device)."""
+    def make(*, review=False, operate=True):
+        user = User.objects.create_user(username="committee", email="committee@itb.ac.id",
+                                        password="Committee-password-123!", is_staff=True)
+        codes = (["operate_election"] if operate else []) + (["review_ballots"] if review else [])
+        user.user_permissions.set(Permission.objects.filter(codename__in=codes))
+        device = TOTPDevice.objects.create(user=user, name="Authenticator", confirmed=True)
+        client = Client()
+        client.force_login(user)
+        session = client.session
+        session["otp_device_id"] = device.persistent_id
+        session.save()
+        return user, client, device
     return make
