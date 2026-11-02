@@ -12,7 +12,7 @@ services:
     name: gea-voting
     runtime: docker
     region: singapore
-    plan: 1c-2g
+    plan: starter
     numInstances: 1
     autoDeployTrigger: "off"
     healthCheckPath: /health/ready/
@@ -52,7 +52,9 @@ services:
       - key: WEB_WORKERS
         value: "2"
       - key: WEB_THREADS
-        value: "4"
+        value: "2"
+      - key: KIOSK_REQUIRED
+        value: "true"
   - type: cron
     name: gea-email-outbox
     runtime: docker
@@ -99,7 +101,7 @@ services:
 databases:
   - name: gea-postgres
     region: singapore
-    plan: 0.5c-1g
+    plan: basic-256mb
     postgresMajorVersion: "17"
     databaseName: gea
     user: gea

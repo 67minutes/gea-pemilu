@@ -72,28 +72,41 @@ function votingRequest(method, url, data = null, params = {}) {
   return response;
 }
 
-function officeVote(user, office) {
-  const page = votingRequest('GET', `${base}/vote/${office}/`);
-  if (page.url.includes('/receipt/')) fail('Rehearsal voters have existing votes; use a fresh database.');
-  const candidates = page.html().find('input[name="candidate"]');
-  const candidate = candidates.eq(__VU % 2).attr('value');
+// One choice per office, taken from the ballot's radio groups (office_<slug>).
+function choices(page, offset) {
+  const picks = {};
+  page.html().find('input[type="radio"]').toArray().forEach(input => {
+    const name = input.attr('name');
+    (picks[name] = picks[name] || []).push(input.attr('value'));
+  });
+  const names = Object.keys(picks);
+  if (!names.length) fail('Ballot is unavailable; check that a voting session is open and not paused.');
+  return Object.fromEntries(names.map(name => [name, picks[name][(__VU + offset) % picks[name].length]]));
+}
+
+function castBallot(user) {
+  const page = votingRequest('GET', `${base}/vote/`);
+  if (page.url.includes('/dashboard/')) fail('Rehearsal voters have existing votes; use a fresh database.');
   const requestId = page.html().find('input[name="request_id"]').attr('value');
-  if (!candidate || !requestId) fail('Ballot is unavailable; check election opening and pause status.');
-  const payload = { csrfmiddlewaretoken: token(page), candidate, request_id: requestId, action: 'review' };
-  const reviewed = votingRequest('POST', `${base}/vote/${office}/`, payload, { headers: { Referer: page.url } });
-  if (!check(reviewed, { 'confirmation shown': r => r.status === 200 && r.html().find('button[value="submit"]').size() === 1 })) {
+  if (!requestId) fail('Ballot is unavailable; check that a voting session is open and not paused.');
+  const payload = { csrfmiddlewaretoken: token(page), request_id: requestId, action: 'review', ...choices(page, 0) };
+  const reviewed = votingRequest('POST', `${base}/vote/`, payload, { headers: { Referer: page.url } });
+  if (!check(reviewed, { 'review shown': r => r.status === 200 && r.html().find('button[value="finalize"]').size() === 1 })) {
     fail('Review failed');
   }
   payload.csrfmiddlewaretoken = token(reviewed);
-  payload.action = 'submit';
-  const result = votingRequest('POST', `${base}/vote/${office}/`, payload, { headers: { Referer: page.url } });
-  const receipt = result.url.match(/\/receipt\/([0-9a-f-]+)\//);
-  if (!check(result, { 'receipt acknowledged': r => r.status === 200 && Boolean(receipt) })) fail('Submission failed');
-  console.log(JSON.stringify({ type: 'receipt', nim: user.nim, office, receipt_id: receipt[1] }));
-  // Re-submit with another candidate: the existing receipt must be returned.
-  payload.candidate = candidates.eq((__VU + 1) % 2).attr('value');
-  const retry = votingRequest('POST', `${base}/vote/${office}/`, payload, { headers: { Referer: page.url } });
-  check(retry, { 'retry preserves original receipt': r => r.status === 200 && r.url === result.url });
+  payload.action = 'finalize';
+  const done = votingRequest('POST', `${base}/vote/`, payload, { headers: { Referer: page.url } });
+  if (!check(done, { 'ballot finalized': r => r.status === 200 && r.url.includes('/done/') })) fail('Finalize failed');
+  console.log(JSON.stringify({ type: 'ballot', nim: user.nim }));
+  authenticated = false;  // finalizing logs the voter out
+  // Log in again and finalize with other candidates: the stored ballot must not change.
+  login(user);
+  const again = votingRequest('GET', `${base}/vote/`);
+  check(again, { 'voted voter is sent to the dashboard': r => r.url.includes('/dashboard/') });
+  const retry = votingRequest('POST', `${base}/vote/`, { ...payload, csrfmiddlewaretoken: token(again), ...choices(page, 1) },
+                              { headers: { Referer: again.url } });
+  check(retry, { 'retry does not vote again': r => r.status === 200 && r.url.includes('/dashboard/') });
 }
 
 export default function () {
@@ -101,9 +114,8 @@ export default function () {
   if (!authenticated) login(user);
   if (mode === 'burst') return;
   if (!cast) {
-    officeVote(user, 'kahim');
-    sleep(1 + Math.random() * 2);
-    officeVote(user, 'senator');
+    sleep(1 + Math.random() * 2);  // time spent reading the ballot
+    castBallot(user);
     cast = true;
   }
   const dashboard = votingRequest('GET', `${base}/dashboard/`);

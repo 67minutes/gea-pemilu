@@ -3,6 +3,10 @@
 The backbone is implemented and verified locally. **Production launch and 500-user capacity
 are not certified.** No live infrastructure was provisioned and no real ITB mail was sent.
 
+> **2 November 2026:** voting moved to in-person kiosk laptops with admin-defined sessions, a single
+> whole-ballot finalize and committee Gmail delivery. The evidence below predates that change; the
+> test suite covers the new flow, but the k6 smoke and browser runs must be repeated against it.
+
 ## Passed
 
 - 45 pytest tests against isolated PostgreSQL 17.11, including concurrent submissions from one
@@ -30,16 +34,15 @@ are not certified.** No live infrastructure was provisioned and no real ITB mail
 | Gate | Status / required evidence |
 |---|---|
 | Docker image build and container smoke | Not run locally: Docker Desktop failed during startup. CI includes an image build. |
-| Render deployment | Needs a pushed Git repository, connected hosting account, domain and production environment values. |
-| Approved content and roster | Needs four real candidate profiles, exact dates, approved NIM/email CSV and verified domain allowlist. |
+| Render deployment | Needs a pushed Git repository, connected hosting account and production environment values (the `*.onrender.com` address is enough). |
+| Approved content and roster | Needs four real candidate profiles, the voting sessions, approved NIM/email CSV and verified domain allowlist. |
 | Committee enrollment | Real committee members must provision separate MFA accounts and store recovery codes. |
-| Real ITB email delivery | Verify sending DNS, delivery to actual ITB mailboxes, bounce webhooks and recovery delivery. |
-| 500-user sustained rehearsal | Run the exact deployment configuration for 60-second ramp + 15-minute sustain; retain k6 and host metrics. |
-| 500-login burst | Run separately; login p95 must be below 10 seconds. Scale CPU/instances without weakening password hashing. |
-| Vote reconciliation | All 1,000 acknowledged rehearsal receipts must match stored votes with no duplicates or loss. |
-| Real dump/restore rehearsal | Archive checksum tests passed; a real `pg_dump` → isolated `pg_restore` and receipt/count comparison remains required. |
-| Monitoring and shutdown owner | Configure hosting alerts, name an operator, and schedule export/archive/shutdown within seven days. |
+| Real ITB email delivery | Committee Gmail with an app password; `send_test_email` lands in the Inbox (not Junk) of two ITB mailboxes; recovery delivery works. |
+| Kiosk laptops | Each laptop enrolled in a dedicated Chrome profile; voter login refused on an unenrolled browser; idle logout and finalize → done → login observed on the real laptops. |
+| Load rehearsal (optional) | Three kiosk laptops make little load. If run: `KIOSK_REQUIRED=false` on an isolated host only; login p95 below 10 seconds. |
+| Vote reconciliation | If the rehearsal runs, every acknowledged ballot must match one stored vote per office with no duplicates or loss. |
+| Real dump/restore rehearsal | Archive checksum tests passed; a real `pg_dump` → isolated `pg_restore` and vote/count comparison remains required. |
+| Monitoring and shutdown owner | Configure hosting alerts, name an operator, and schedule export/archive/shutdown after the last session. |
 
-The initial two 1-CPU web instances are a starting size, not a demonstrated capacity result.
-Password verification can require substantially more CPU for a 500-person simultaneous login burst.
+The Starter web instance is sized for three kiosk laptops, not a demonstrated capacity result.
 Do not activate a production election until the applicable release gates pass.

@@ -31,18 +31,23 @@ def test_archive_encryption_and_manifest(make_election, tmp_path):
         call_command("archive_election", str(dump), output=str(target), key_file=str(key))
 
 
-def test_rehearsal_receipts_reconcile(make_election, tmp_path):
-    _e, _o, candidates, voters = make_election(name="DEMO — Rehearsal")
-    votes, _ = submit_ballot(voters[0].user, {slug: candidates[slug][0].pk for slug in ["kahim", "senator"]},
-                             uuid.uuid4())
-    records = [{"type": "receipt", "nim": voters[0].user.username, "office": vote.office.slug,
-                "receipt_id": str(vote.receipt_id)} for vote in votes]
-    path = tmp_path / "receipts.jsonl"
-    path.write_text("\n".join(json.dumps(record) for record in records))
-    call_command("verify_rehearsal", str(path), expected_voters=1, stdout=StringIO())
-    path.write_text(json.dumps(records[0]))
-    with pytest.raises(CommandError, match="unique acknowledged"):
-        call_command("verify_rehearsal", str(path), expected_voters=1)
+def test_verify_rehearsal_counts_ballots(make_election, tmp_path):
+    _e, _o, candidates, voters = make_election(name="DEMO — Rehearsal", voter_count=3)
+    for voter in voters[:2]:
+        submit_ballot(voter.user, {slug: candidates[slug][0].pk for slug in candidates}, uuid.uuid4())
+    path = tmp_path / "ballots.jsonl"
+
+    def verify(*nims, expected=2):
+        path.write_text("\n".join(json.dumps({"type": "ballot", "nim": nim}) for nim in nims))
+        call_command("verify_rehearsal", str(path), expected_voters=expected, stdout=StringIO())
+
+    nims = [voter.user.username for voter in voters[:2]]
+    verify(*nims)
+    for bad in [nims[:1], nims + nims[:1], [nims[0], "99999999"]]:
+        with pytest.raises(CommandError):
+            verify(*bad)
+    with pytest.raises(CommandError, match="votes in the database"):  # third voter logged, never stored
+        verify(*nims, voters[2].user.username, expected=3)
 
 
 def test_password_change_cancels_stale_initial_credentials(make_election):
