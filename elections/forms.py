@@ -22,8 +22,13 @@ class VoterLoginForm(AuthenticationForm):
         if user.is_staff or not hasattr(user, "voter"):
             raise forms.ValidationError(self.error_messages["invalid_login"], code="invalid_login",
                                         params={"username": "NIM"})
+
+    def clean(self):
+        # Checked before the password: a different answer for a correct password off a kiosk would
+        # let anyone test credentials from anywhere.
         if settings.KIOSK_REQUIRED and not current_device(self.request):
             raise forms.ValidationError(_("This device is not a registered voting laptop."), code="kiosk")
+        return super().clean()
 
 
 class BallotForm(forms.Form):

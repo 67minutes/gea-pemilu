@@ -186,3 +186,13 @@ def test_staff_login_and_password_reset_work_without_kiosk(client, make_election
     assert client.get(reverse("committee_admin:login")).status_code == 200
     response = client.post(reverse("password_reset"), {"email": "12000001@students.itb.ac.id"})
     assert response.status_code == 302 and response.url == reverse("password_reset_done")
+
+
+def test_unenrolled_device_never_checks_the_password(client, make_election, settings):
+    settings.KIOSK_REQUIRED = True
+    _e, _o, _c, voters = make_election()
+    with patch("django.contrib.auth.forms.authenticate") as authenticate:
+        for password in [PASSWORD, "wrong-password"]:
+            response = client.post(reverse("login"), {"username": voters[0].user.username, "password": password})
+            assert [e.code for e in response.context["form"].non_field_errors().as_data()] == ["kiosk"]
+    authenticate.assert_not_called()
