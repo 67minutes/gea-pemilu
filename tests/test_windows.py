@@ -237,10 +237,11 @@ def test_committee_window_errors_are_messages_not_500(make_election, staff_clien
     _user, client, _device = staff_client()
     start = timezone.localtime(window.starts_at + H / 2).strftime("%Y-%m-%dT%H:%M")
     end = timezone.localtime(window.ends_at + H).strftime("%Y-%m-%dT%H:%M")
-    response = window_post(client, action="add_window", starts_at=start, ends_at=end)
-    assert response.status_code == 200 and "overlap" in response.content.decode()
-    response = window_post(client, action="add_window", starts_at="not a date", ends_at=end)
-    assert response.status_code == 200 and VotingWindow.objects.count() == 1
+    for starts_at in [start, "not a date"]:
+        response = window_post(client, action="add_window", starts_at=starts_at, ends_at=end)
+        assert response.status_code == 200
+        assert [m.level_tag for m in response.context["messages"]] == ["error"]
+    assert VotingWindow.objects.count() == 1
 
 
 def test_committee_window_actions_need_operate_permission(make_election, staff_client):
