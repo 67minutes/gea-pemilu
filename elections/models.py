@@ -152,6 +152,8 @@ class Voter(models.Model):
     user = models.OneToOneField(User, on_delete=models.PROTECT, related_name="voter")
     display_name = models.CharField(max_length=150, blank=True)
     credentials_issued_at = models.DateTimeField(null=True, blank=True, editable=False)
+    # The newest login's session; any older session for this voter is ended on its next request.
+    session_key = models.CharField(max_length=40, blank=True, editable=False)
 
     class Meta:
         verbose_name = _("Voter")

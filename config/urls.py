@@ -4,6 +4,7 @@ from django.urls import include, path
 from elections import views
 from elections.admin import site
 from elections.forms import ApprovedPasswordResetForm
+from elections.kiosk import kiosk_ping
 from elections.webhooks import resend_events
 
 urlpatterns = [
@@ -14,6 +15,7 @@ urlpatterns = [
     path("dashboard/", views.dashboard, name="dashboard"),
     path("vote/", views.ballot, name="ballot"),
     path("done/", views.done, name="done"),
+    path("kiosk/ping/", kiosk_ping, name="kiosk_ping"),
     path("results/", views.results, name="results"),
     path("about/", views.about, name="about"),
     path("helpdesk/", views.helpdesk, name="helpdesk"),

@@ -831,3 +831,13 @@ msgid ""
 msgstr ""
 "Permintaan ini tidak dapat diselesaikan. Periksa status surat suara Anda "
 "sebelum memfinalisasi lagi."
+
+msgid "Your session ended after a period of inactivity."
+msgstr "Sesi Anda berakhir karena tidak ada aktivitas."
+
+msgid "You signed in on another laptop, so this session ended."
+msgstr "Anda masuk di laptop lain, sehingga sesi ini diakhiri."
+
+msgid "Session ends in %(seconds)s seconds. Touch the screen to continue."
+msgstr ""
+"Sesi berakhir dalam %(seconds)s detik — sentuh layar untuk melanjutkan."

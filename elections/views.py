@@ -61,6 +61,12 @@ class VoterLoginView(LoginView):
     authentication_form = VoterLoginForm
     redirect_authenticated_user = True
 
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        # Only the newest login stays signed in: KioskMiddleware ends any older session.
+        Voter.objects.filter(user=self.request.user).update(session_key=self.request.session.session_key)
+        return response
+
 
 def committee_required(permission=None):
     def decorate(view):
