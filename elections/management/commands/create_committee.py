@@ -13,6 +13,10 @@ from django_otp.plugins.otp_totp.models import TOTPDevice
 from elections.models import User
 from elections.services import audit
 
+COMMITTEE_PERMISSIONS = ["operate_election", "view_election", "add_election", "change_election",
+                         "view_office", "add_office", "change_office", "view_candidate", "add_candidate",
+                         "change_candidate", "view_voter", "view_emaildelivery", "view_auditevent"]
+
 
 class Command(BaseCommand):
     help = "Provision a separate committee account and authenticator/recovery codes interactively."
@@ -37,9 +41,7 @@ class Command(BaseCommand):
             raise CommandError("; ".join(exc.messages)) from exc
         user.set_password(password)
         user.save()
-        codes = ["operate_election", "view_election", "add_election", "change_election",
-                 "view_office", "add_office", "change_office", "view_candidate", "add_candidate",
-                 "change_candidate", "view_voter", "view_emaildelivery", "view_auditevent"]
+        codes = list(COMMITTEE_PERMISSIONS)
         if options["review_ballots"]:
             codes.append("review_ballots")
         user.user_permissions.set(Permission.objects.filter(content_type__app_label="elections", codename__in=codes))
