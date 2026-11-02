@@ -172,6 +172,7 @@ class EmailDelivery(models.Model):
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
     provider_id = models.CharField(max_length=100, blank=True)
     last_error = models.CharField(max_length=100, blank=True)
+    sent_at = models.DateTimeField(null=True, blank=True)
     delivered_at = models.DateTimeField(null=True, blank=True)
     bounced_at = models.DateTimeField(null=True, blank=True)
 

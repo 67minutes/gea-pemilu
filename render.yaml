@@ -38,13 +38,15 @@ services:
       - key: CSRF_TRUSTED_ORIGINS
         sync: false
       - key: EMAIL_TRANSPORT
-        value: resend
+        value: gmail
       - key: DEFAULT_FROM_EMAIL
         sync: false
-      - key: RESEND_API_KEY
+      - key: EMAIL_HOST_USER
         sync: false
-      - key: RESEND_WEBHOOK_SECRET
+      - key: EMAIL_HOST_PASSWORD
         sync: false
+      - key: EMAIL_DAILY_LIMIT
+        value: "450"
       - key: ITB_EMAIL_DOMAINS
         sync: false
       - key: WEB_WORKERS
@@ -57,7 +59,7 @@ services:
     region: singapore
     plan: 0.5c-512mb
     schedule: "* * * * *"
-    dockerCommand: python manage.py process_outbox --limit 50
+    dockerCommand: python manage.py process_outbox --limit 10
     autoDeployTrigger: "off"
     envVars:
       - fromGroup: gea-secrets
@@ -73,17 +75,27 @@ services:
           name: gea-voting
           envVarKey: PUBLIC_BASE_URL
       - key: EMAIL_TRANSPORT
-        value: resend
+        value: gmail
       - key: DEFAULT_FROM_EMAIL
         fromService:
           type: web
           name: gea-voting
           envVarKey: DEFAULT_FROM_EMAIL
-      - key: RESEND_API_KEY
+      - key: EMAIL_HOST_USER
         fromService:
           type: web
           name: gea-voting
-          envVarKey: RESEND_API_KEY
+          envVarKey: EMAIL_HOST_USER
+      - key: EMAIL_HOST_PASSWORD
+        fromService:
+          type: web
+          name: gea-voting
+          envVarKey: EMAIL_HOST_PASSWORD
+      - key: EMAIL_DAILY_LIMIT
+        fromService:
+          type: web
+          name: gea-voting
+          envVarKey: EMAIL_DAILY_LIMIT
 databases:
   - name: gea-postgres
     region: singapore

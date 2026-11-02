@@ -103,6 +103,13 @@ EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
 EMAIL_HOST = os.getenv("EMAIL_HOST", "localhost")
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", "1025"))
 EMAIL_TIMEOUT = 10
+# Gmail transport: the committee account and its app password, never the account password.
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+# Sends per rolling 24 hours (0 = unlimited); Gmail allows about 500.
+EMAIL_DAILY_LIMIT = int(os.getenv("EMAIL_DAILY_LIMIT", "0"))
+# Daily sends kept free for password resets while credentials are issued.
+EMAIL_RESET_RESERVE = int(os.getenv("EMAIL_RESET_RESERVE", "50"))
 PASSWORD_RESET_TIMEOUT = 3600
 THROTTLE_ACCOUNT_LIMIT = int(os.getenv("THROTTLE_ACCOUNT_LIMIT", "10"))
 # Failed logins for one account across all addresses; bounds distributed guessing.
