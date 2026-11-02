@@ -1,0 +1,29 @@
+{% extends 'base.html' %}{% load i18n tz %}
+{% block title %}{% translate "Kiosk laptops" %}{% endblock %}
+{% block content %}
+<div class="wrap page">
+  <a class="back" href="{% url 'committee' %}"><span aria-hidden="true">←</span> {% translate "Committee" %}</a>
+  <header class="page-head">
+    <h1 class="title">{% translate "Kiosk laptops" %}</h1>
+    <p class="quiet">{% translate "Voters can log in only from enrolled laptops. Open this page on each voting laptop, enroll it, then log out of the committee." %}</p>
+  </header>
+  <p class="note" data-current-kiosk="{% if current %}{{ current.pk }}{% endif %}">{% if current %}{% blocktranslate with label=current.label %}This browser is enrolled as “{{ label }}”.{% endblocktranslate %}{% else %}{% translate "This browser is not enrolled." %}{% endif %}</p>
+  <form method="post" class="narrow-form gap-top">{% csrf_token %}
+    {% include 'partials/fields.html' %}
+    <button class="btn btn-solid" name="action" value="enroll">{% translate "Enroll this browser" %}</button>
+  </form>
+  {% if devices %}
+  <section class="panel">
+    <h2 class="section-title">{% translate "Enrolled laptops" %}</h2>
+    <div class="table-scroll"><table><thead><tr><th>{% translate "Laptop" %}</th><th>{% translate "Enrolled (WIB)" %}</th><th>{% translate "Status" %}</th><th></th></tr></thead><tbody>
+    {% for device in devices %}<tr>
+      <td>{{ device.label }}{% if device == current %} · {% translate "this browser" %}{% endif %}</td>
+      <td class="mono">{{ device.enrolled_at|localtime|date:"d M Y, H:i" }}</td>
+      <td>{% if device.revoked_at %}{% translate "Revoked" %} · <span class="mono">{{ device.revoked_at|localtime|date:"d M, H:i" }}</span>{% else %}{% translate "Active" %}{% endif %}</td>
+      <td>{% if not device.revoked_at %}<form method="post">{% csrf_token %}<input type="hidden" name="device_id" value="{{ device.pk }}"><button class="btn btn-small" name="action" value="revoke">{% translate "Revoke" %}</button></form>{% endif %}</td>
+    </tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

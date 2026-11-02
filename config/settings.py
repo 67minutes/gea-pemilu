@@ -113,6 +113,9 @@ EMAIL_DAILY_LIMIT = int(os.getenv("EMAIL_DAILY_LIMIT", "0"))
 EMAIL_RESET_RESERVE = int(os.getenv("EMAIL_RESET_RESERVE", "50"))
 # Shared kiosk laptops: a voter session ends after this many seconds without activity.
 KIOSK_IDLE_SECONDS = int(os.getenv("KIOSK_IDLE_SECONDS", "180"))
+# Voters may log in only from browsers the committee enrolled; the enrollment cookie lasts this long.
+KIOSK_REQUIRED = os.getenv("KIOSK_REQUIRED", "true").lower() == "true"
+KIOSK_COOKIE_AGE = int(os.getenv("KIOSK_COOKIE_AGE", str(60 * 24 * 3600)))
 PASSWORD_RESET_TIMEOUT = 3600
 THROTTLE_ACCOUNT_LIMIT = int(os.getenv("THROTTLE_ACCOUNT_LIMIT", "10"))
 # Failed logins for one account across all addresses; bounds distributed guessing.

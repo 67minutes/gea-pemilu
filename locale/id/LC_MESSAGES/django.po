@@ -841,3 +841,79 @@ msgstr "Anda masuk di laptop lain, sehingga sesi ini diakhiri."
 msgid "Session ends in %(seconds)s seconds. Touch the screen to continue."
 msgstr ""
 "Sesi berakhir dalam %(seconds)s detik — sentuh layar untuk melanjutkan."
+
+msgid "label"
+msgstr "label"
+
+msgid "Kiosk laptop"
+msgstr "Laptop pemungutan suara"
+
+msgid "Kiosk laptops"
+msgstr "Laptop pemungutan suara"
+
+msgid "This device is not a registered voting laptop."
+msgstr "Perangkat ini bukan laptop pemungutan suara yang terdaftar."
+
+msgid "Laptop label"
+msgstr "Nama laptop"
+
+msgid "e.g. Laptop 1"
+msgstr "mis. Laptop 1"
+
+msgid "Enter a label for this laptop."
+msgstr "Masukkan nama untuk laptop ini."
+
+msgid ""
+"This browser is now enrolled. Log out of the committee before voters use it."
+msgstr ""
+"Peramban ini sudah terdaftar. Keluar dari akun panitia sebelum pemilih "
+"menggunakannya."
+
+msgid "Invalid kiosk laptop."
+msgstr "Laptop pemungutan suara tidak valid."
+
+msgid "Kiosk laptop revoked. Voters signed in on it are logged out."
+msgstr ""
+"Laptop pemungutan suara dicabut. Pemilih yang masuk di laptop itu telah "
+"dikeluarkan."
+
+msgid ""
+"Voters can log in only from enrolled laptops. Open this page on each voting "
+"laptop, enroll it, then log out of the committee."
+msgstr ""
+"Pemilih hanya dapat masuk dari laptop yang terdaftar. Buka halaman ini di "
+"setiap laptop pemungutan suara, daftarkan, lalu keluar dari akun panitia."
+
+msgid "This browser is enrolled as “%(label)s”."
+msgstr "Peramban ini terdaftar sebagai “%(label)s”."
+
+msgid "This browser is not enrolled."
+msgstr "Peramban ini belum terdaftar."
+
+msgid "Enroll this browser"
+msgstr "Daftarkan peramban ini"
+
+msgid "Enrolled laptops"
+msgstr "Laptop terdaftar"
+
+msgid "Laptop"
+msgstr "Laptop"
+
+msgid "Enrolled (WIB)"
+msgstr "Didaftarkan (WIB)"
+
+msgid "this browser"
+msgstr "peramban ini"
+
+msgid "Active"
+msgstr "Aktif"
+
+msgid "Revoke"
+msgstr "Cabut"
+
+msgid ""
+"This device is not a registered voting laptop. Voting happens on the "
+"committee laptops at the polling station."
+msgstr ""
+"Perangkat ini bukan laptop pemungutan suara yang terdaftar. Pemungutan suara"
+" dilakukan di laptop panitia di tempat pemungutan suara."

@@ -211,6 +211,23 @@ class EmailDelivery(models.Model):
         indexes = [models.Index(fields=["status", "next_attempt_at"])]
 
 
+class KioskDevice(models.Model):
+    """A committee laptop enrolled for voter logins; the browser holds a signed cookie naming it."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    label = models.CharField(_("label"), max_length=50)
+    enrolled_at = models.DateTimeField(default=timezone.now, editable=False)
+    revoked_at = models.DateTimeField(null=True, blank=True, editable=False)
+
+    class Meta:
+        ordering = ["enrolled_at"]
+        verbose_name = _("Kiosk laptop")
+        verbose_name_plural = _("Kiosk laptops")
+
+    def __str__(self):
+        return self.label
+
+
 class AuditEvent(models.Model):
     actor = models.ForeignKey(User, null=True, on_delete=models.PROTECT)
     action = models.CharField(max_length=80)

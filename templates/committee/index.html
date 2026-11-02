@@ -9,7 +9,8 @@
     </div>
     <nav class="links" aria-label="{% translate 'Committee' %}">
       <a class="textlink" href="{% url 'committee_admin:index' %}">{% translate "Election configuration" %}</a>
-      {% if can_operate %}<a class="textlink" href="{% url 'roster_import' %}">{% translate "Import voter CSV" %}</a>{% endif %}
+      {% if can_operate %}<a class="textlink" href="{% url 'roster_import' %}">{% translate "Import voter CSV" %}</a>
+      <a class="textlink" href="{% url 'kiosks' %}">{% translate "Kiosk laptops" %}</a>{% endif %}
     </nav>
   </header>
 

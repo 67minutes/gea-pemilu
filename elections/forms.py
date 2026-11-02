@@ -7,6 +7,7 @@ from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
 from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 
+from .kiosk import current_device
 from .mail import enqueue, reset_allowed
 from .models import Voter
 
@@ -21,6 +22,8 @@ class VoterLoginForm(AuthenticationForm):
         if user.is_staff or not hasattr(user, "voter"):
             raise forms.ValidationError(self.error_messages["invalid_login"], code="invalid_login",
                                         params={"username": "NIM"})
+        if settings.KIOSK_REQUIRED and not current_device(self.request):
+            raise forms.ValidationError(_("This device is not a registered voting laptop."), code="kiosk")
 
 
 class BallotForm(forms.Form):
@@ -41,6 +44,11 @@ class BallotForm(forms.Form):
 
     def choices(self):
         return {office.slug: self.cleaned_data[f"office_{office.slug}"].pk for office in self.offices}
+
+
+class KioskForm(forms.Form):
+    label = forms.CharField(label=_("Laptop label"), max_length=50,
+                            widget=forms.TextInput(attrs={"placeholder": _("e.g. Laptop 1")}))
 
 
 class RosterForm(forms.Form):

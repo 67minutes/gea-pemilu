@@ -4,7 +4,7 @@ from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 from django_otp.admin import OTPAdminAuthenticationForm, OTPAdminSite
 
-from .models import AuditEvent, Candidate, Election, EmailDelivery, Office, Voter, VotingWindow
+from .models import AuditEvent, Candidate, Election, EmailDelivery, KioskDevice, Office, Voter, VotingWindow
 from .services import audit
 
 site = OTPAdminSite(name="committee_admin")
@@ -125,6 +125,12 @@ class EmailDeliveryAdmin(ReadOnlyAdmin):
     fields = ["user", "kind", "status", "attempts", "last_error", "provider_id", "created_at", "delivered_at", "bounced_at"]
     list_display = ["user", "kind", "status", "attempts", "last_error", "delivered_at", "bounced_at"]
     list_filter = ["status", "kind"]
+
+
+@admin.register(KioskDevice, site=site)
+class KioskDeviceAdmin(ReadOnlyAdmin):
+    fields = ["label", "enrolled_at", "revoked_at"]
+    list_display = ["label", "enrolled_at", "revoked_at"]
 
 
 @admin.register(AuditEvent, site=site)

@@ -1,6 +1,8 @@
 import csv
+import uuid
 from functools import wraps
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
@@ -15,8 +17,9 @@ from django.utils.translation import gettext as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
-from .forms import BallotForm, RosterForm, VoterLoginForm, WindowForm
-from .models import AuditEvent, Election, EmailDelivery, Office, Vote, Voter
+from .forms import BallotForm, KioskForm, RosterForm, VoterLoginForm, WindowForm
+from .kiosk import COOKIE, current_device, sign_device
+from .models import AuditEvent, Election, EmailDelivery, KioskDevice, Office, Vote, Voter
 from .services import (
     ElectionError,
     activate,
@@ -66,6 +69,10 @@ class VoterLoginView(LoginView):
         # Only the newest login stays signed in: KioskMiddleware ends any older session.
         Voter.objects.filter(user=self.request.user).update(session_key=self.request.session.session_key)
         return response
+
+    def get_context_data(self, **kwargs):
+        return {**super().get_context_data(**kwargs),
+                "kiosk_unenrolled": settings.KIOSK_REQUIRED and not current_device(self.request)}
 
 
 def committee_required(permission=None):
@@ -183,6 +190,43 @@ def window_action(request, action):
         add_window(request.user, data["starts_at"], data["ends_at"])
     elif action == "extend_window":
         extend_window(request.user, data["window_id"], data["ends_at"])
+
+
+@committee_required("elections.operate_election")
+@never_cache
+@require_http_methods(["GET", "POST"])
+def kiosks(request):
+    if request.method == "POST":
+        action = request.POST.get("action")
+        if action == "enroll":
+            form = KioskForm(request.POST)
+            if not form.is_valid():
+                messages.error(request, _("Enter a label for this laptop."))
+                return redirect("kiosks")
+            device = KioskDevice.objects.create(label=form.cleaned_data["label"])
+            audit(request.user, "kiosk.enrolled", device=str(device.pk), label=device.label)
+            messages.success(request, _("This browser is now enrolled. Log out of the committee before voters use it."))
+            response = redirect("kiosks")
+            response.set_cookie(COOKIE, sign_device(device), max_age=settings.KIOSK_COOKIE_AGE,
+                                secure=settings.SESSION_COOKIE_SECURE, httponly=True, samesite="Lax")
+            return response
+        if action == "revoke":
+            try:
+                device_id = uuid.UUID(request.POST.get("device_id", ""))
+            except ValueError:
+                device_id = None
+            device = device_id and KioskDevice.objects.filter(pk=device_id, revoked_at__isnull=True).first()
+            if not device:
+                messages.error(request, _("Invalid kiosk laptop."))
+                return redirect("kiosks")
+            device.revoked_at = timezone.now()
+            device.save(update_fields=["revoked_at"])
+            audit(request.user, "kiosk.revoked", device=str(device.pk), label=device.label)
+            messages.success(request, _("Kiosk laptop revoked. Voters signed in on it are logged out."))
+            return redirect("kiosks")
+        raise PermissionDenied
+    return render(request, "committee/kiosks.html", {"devices": KioskDevice.objects.all(),
+        "current": current_device(request), "form": KioskForm()})
 
 
 @committee_required("elections.operate_election")

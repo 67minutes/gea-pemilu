@@ -23,6 +23,7 @@ def test_settings(settings):
     settings.OUTBOX_KEY = Fernet.generate_key().decode()
     settings.EMAIL_TRANSPORT = "file"
     settings.EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+    settings.KIOSK_REQUIRED = False  # kiosk tests turn enrollment back on
 
 
 @pytest.fixture

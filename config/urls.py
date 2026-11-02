@@ -27,6 +27,7 @@ urlpatterns = [
     path("committee/", views.committee, name="committee"),
     path("committee/import/", views.roster_import, name="roster_import"),
     path("committee/action/", views.committee_action, name="committee_action"),
+    path("committee/kiosks/", views.kiosks, name="kiosks"),
     path("committee/export/<slug:kind>/", views.export_results, name="export_results"),
     path("committee/admin/", site.urls),
     path("health/live/", views.health_live, name="health_live"),
