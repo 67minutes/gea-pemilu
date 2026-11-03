@@ -285,6 +285,9 @@ msgstr "Masuk"
 msgid "Forgot your password?"
 msgstr "Lupa password?"
 
+msgid "Forgot your password? Contact the helpdesk"
+msgstr "Lupa password? Hubungi helpdesk"
+
 msgid "Reset password"
 msgstr "Pulihkan password"
 
@@ -623,14 +626,12 @@ msgstr ""
 "Kredensial dikirim ke email ITB yang terdaftar. Periksa folder spam atau "
 "promosi terlebih dahulu, lalu hubungi kami dengan NIM dan nama lengkap."
 
-msgid "Request a new one on the"
-msgstr "Minta yang baru melalui"
-
-msgid "password reset page"
-msgstr "halaman reset password"
-
-msgid "The link goes to your approved ITB email."
-msgstr "Tautan dikirim ke email ITB yang terdaftar."
+msgid ""
+"Contact us with your NIM and full name, and the committee will help you set "
+"a new one."
+msgstr ""
+"Hubungi kami dengan NIM dan nama lengkap, lalu panitia akan membantu Anda "
+"membuat password baru."
 
 msgid "Your NIM is not recognised?"
 msgstr "NIM tidak dikenali?"
