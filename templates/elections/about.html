@@ -1,4 +1,4 @@
-{% extends 'base.html' %}{% load i18n %}
+{% extends 'base.html' %}{% load i18n static %}
 {% block title %}{% translate "About us" %}{% endblock %}
 {% block content %}
 <div class="wrap page">
@@ -10,7 +10,7 @@
   <ul class="crew">
     {% with role=chair.0 name=chair.1 nim=chair.2 %}
     <li class="member is-chair">
-      <span class="portrait" aria-hidden="true"></span>
+      {% if nim in photos %}<img class="portrait" src="{% static 'img/committee/'|add:nim|add:'.jpg' %}" alt="{{ name }}" width="480" height="480" loading="lazy" decoding="async">{% else %}<span class="portrait" aria-hidden="true"></span>{% endif %}
       <div class="member-text">
         <span class="role">{% translate "Committee chair" %}</span>
         <span class="member-name">{{ name }}</span>
@@ -20,7 +20,7 @@
     {% endwith %}
     {% for role, name, nim in committee %}
     <li class="member">
-      <span class="portrait" aria-hidden="true"></span>
+      {% if nim in photos %}<img class="portrait" src="{% static 'img/committee/'|add:nim|add:'.jpg' %}" alt="{{ name }}" width="480" height="480" loading="lazy" decoding="async">{% else %}<span class="portrait" aria-hidden="true"></span>{% endif %}
       <div class="member-text">
         <span class="role">{{ role }}</span>
         <span class="member-name">{{ name }}</span>

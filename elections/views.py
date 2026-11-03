@@ -56,6 +56,9 @@ COMMITTEE = [
     ("Sekretaris dan Bendahara", "Rayna Amelia", "12024097"),
     ("Disiplin", "Muhammad Iqbal Rifa’i", "12024076"),
 ]
+# NIMs with a portrait at static/img/committee/<nim>.jpg; the rest keep the placeholder.
+COMMITTEE_PHOTOS = {"12024106", "12024107", "12024048", "12024081", "12024034", "12024101", "12024096",
+                    "12024089", "12024005", "12024059", "12024018", "12024079", "12024097", "12024076"}
 HELPDESK = {"name": "Sahara Nada Maheswari", "role": "IT", "phone": "0851-2804-7459", "e164": "6285128047459"}
 
 
@@ -152,7 +155,8 @@ def results(request):
 
 @require_GET
 def about(request):
-    return render(request, "elections/about.html", {"chair": COMMITTEE_CHAIR, "committee": COMMITTEE})
+    return render(request, "elections/about.html", {"chair": COMMITTEE_CHAIR, "committee": COMMITTEE,
+        "photos": COMMITTEE_PHOTOS})
 
 
 @require_GET
