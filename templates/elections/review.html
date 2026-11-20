@@ -4,16 +4,16 @@
 {% block content %}
 <div class="wrap page">
   <header class="page-head">
-    <p class="eyebrow">{{ election.name }}</p>
     <h1 class="title">{% translate "Review your ballot" %}</h1>
   </header>
   {% for pick in picks %}
   <section class="verdict review-pick">
-    <span class="portrait" aria-hidden="true"></span>
+    {% include 'partials/candidate_portrait.html' with candidate=pick.candidate %}
     <div>
-      <p class="eyebrow">{{ pick.office }}</p>
+      <p class="quiet">{{ pick.office }}</p>
       <span class="num" aria-hidden="true">{{ pick.candidate.number|stringformat:"02d" }}</span>
-      <h2 class="verdict-name"><span class="sr-only">{{ pick.office }}: {{ pick.candidate.number }}. </span>{{ pick.candidate.name }}</h2>
+      <h2 class="verdict-name"><span class="sr-only">{{ pick.office }}: {{ pick.candidate.number }}. </span>{{ pick.candidate.display_name }}</h2>
+      {% if pick.candidate.nim %}<span class="nim">{{ pick.candidate.nim }}</span>{% endif %}
     </div>
   </section>
   {% endfor %}

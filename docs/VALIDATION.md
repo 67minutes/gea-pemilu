@@ -1,5 +1,22 @@
 # Verification status — 24 October 2026
 
+## Candidate and announcement update — 20 November 2026
+
+- 147 tests passed against local PostgreSQL, including senator-only empty-box database guards,
+  ballot review/finalization, winner-only public output, ties, zero votes, legacy snapshots,
+  and preparation/enrollment of 21 demo accounts without opening an election.
+- Ruff, Django system checks, migration-drift check, and static collection passed.
+- Playwright checked rendered test fixtures at 1440 × 1050 and 390 × 844: supplied portraits load,
+  radio choices can be selected, results use two desktop columns, and ballot/review/results have
+  no horizontal overflow. These are synthetic previews, not an announcement of actual winners.
+  Browser previews use a static local server; voting POSTs are covered by the Django/PostgreSQL tests.
+- Local migrations applied. Exactly 21 inactive demo accounts were prepared without voter records;
+  the existing closed test election, its one voter, and its voting dates were preserved.
+- Candidate roster application and demo enrollment were not run against that frozen election.
+  No new election was created, activated, or scheduled. No production deployment was performed.
+
+The following sections record earlier verification and are not a current deployment inventory.
+
 The backbone is implemented and verified locally. **Production launch and 500-user capacity
 are not certified.** No live infrastructure was provisioned and no real ITB mail was sent.
 

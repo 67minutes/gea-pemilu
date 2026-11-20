@@ -946,3 +946,40 @@ msgstr ""
 "Beri tahu panitia di tempat pemungutan suara. Masuk kembali untuk melihat "
 "apakah surat suara Anda sudah tersimpan; surat suara tersimpan utuh atau "
 "tidak sama sekali."
+
+msgid "Ketua Umum BPH"
+msgstr "Ketua Umum BPH"
+
+msgid "Ketua Umum BPH & Senator"
+msgstr "Ketua Umum BPH & Senator"
+
+msgid ""
+"The committee prepares, runs, and safeguards the Ketua Umum BPH and Senator "
+"election."
+msgstr ""
+"Panitia menyiapkan, menjalankan, dan menjaga Pemilu Ketua Umum BPH dan "
+"Senator."
+
+msgid "Empty box"
+msgstr "Kotak kosong"
+
+msgid "Empty box wins"
+msgstr "Kotak kosong menang"
+
+msgid "Elected"
+msgstr "Terpilih"
+
+msgid "Elected candidates and their vote counts after voting closed."
+msgstr ""
+"Calon terpilih beserta perolehan suaranya setelah pemungutan suara ditutup."
+
+msgid "No senator was elected. The committee will apply the election rules."
+msgstr ""
+"Tidak ada senator yang terpilih. Panitia akan menerapkan ketentuan pemilu."
+
+msgid "No votes were cast. No winner can be announced."
+msgstr "Tidak ada suara yang masuk. Pemenang belum dapat diumumkan."
+
+msgid "Winners will be announced automatically after voting closes."
+msgstr ""
+"Pemenang akan diumumkan secara otomatis setelah pemungutan suara ditutup."
