@@ -1,0 +1,1 @@
+{% load static %}{% if candidate.is_blank %}<span class="portrait portrait-empty" aria-hidden="true"><span></span></span>{% elif candidate.photo_path %}<img class="portrait candidate-photo" src="{% static candidate.photo_path %}" alt="{{ candidate.name }}" decoding="async">{% else %}<span class="portrait" aria-hidden="true"></span>{% endif %}

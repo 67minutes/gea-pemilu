@@ -2,6 +2,7 @@ import uuid
 
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models.functions import Lower
 from django.utils import timezone
@@ -109,7 +110,7 @@ class VotingWindow(models.Model):
 
 class Office(models.Model):
     class Slug(models.TextChoices):
-        KAHIM = "kahim", "Ketua Himpunan"
+        KAHIM = "kahim", _("Ketua Umum BPH")
         SENATOR = "senator", "Senator"
 
     election = models.ForeignKey(Election, on_delete=models.PROTECT, related_name="offices", verbose_name=_("Election"))
@@ -124,13 +125,35 @@ class Office(models.Model):
     def __str__(self):
         return self.get_slug_display()
 
+    @property
+    def candidate_heading(self):
+        return _("Calon Ketua Umum BPH") if self.slug == self.Slug.KAHIM else _("Calon Senator")
+
 
 class Candidate(models.Model):
     office = models.ForeignKey(Office, on_delete=models.PROTECT, related_name="candidates", verbose_name=_("Office"))
     number = models.PositiveSmallIntegerField(_("Candidate number"), choices=[(1, "1"), (2, "2")])
     name = models.CharField(_("Name"), max_length=150)
-    profile_id = models.TextField(_("Profile (Indonesian)"))
-    profile_en = models.TextField(_("Profile (English)"))
+    profile_id = models.TextField(_("Profile (Indonesian)"), blank=True)
+    profile_en = models.TextField(_("Profile (English)"), blank=True)
+    nim = models.CharField("NIM", max_length=8, blank=True,
+                           validators=[RegexValidator(r"^[0-9]{8}$", "Enter an eight-digit NIM.")])
+    is_blank = models.BooleanField(_("Empty box"), default=False)
+
+    def clean(self):
+        super().clean()
+        if self.is_blank and (self.office.slug != "senator" or self.number != 2 or self.nim):
+            raise ValidationError("The empty box must be senator choice 2, without a NIM.")
+
+    @property
+    def photo_path(self):
+        from .candidate_roster import PORTRAITS
+
+        return PORTRAITS.get(self.nim, "") if not self.is_blank else ""
+
+    @property
+    def display_name(self):
+        return _("Empty box") if self.is_blank else self.name
 
     class Meta:
         verbose_name = _("Candidate")
@@ -141,7 +164,16 @@ class Candidate(models.Model):
 
     @property
     def profile(self):
-        return self.profile_en if get_language() == "en" else self.profile_id
+        profile = self.profile_en if get_language() == "en" else self.profile_id
+        # Hide old placeholders without rewriting frozen election content.
+        if profile.strip().rstrip(".").casefold() in {
+            "profil belum tersedia", "profil tidak tersedia", "profile not yet available",
+            "profile unavailable", "profile not available",
+            "visi dan misi calon akan ditampilkan di sini",
+            "the candidate's vision and mission will appear here",
+        }:
+            return ""
+        return profile
 
     def __str__(self):
         return f"{self.office} / {self.number}. {self.name}"

@@ -32,13 +32,13 @@ def test_home_has_no_visible_demo_marker(client, make_election):
     page = client.get(reverse("home")).content.decode()
     assert "DEMO" not in page
     assert 'data-rehearsal="true"' in page  # invisible gate for loadtest/voting.js
-    assert "Ketua Himpunan" in page
+    assert "Ketua Umum BPH" in page
 
 
 def test_results_use_office_label(client, make_election):
     make_election(closes_in=-timedelta(minutes=1))
     page = client.get(reverse("results")).content.decode()
-    assert "Ketua Himpunan" in page and ">Kahim<" not in page
+    assert "Ketua Umum BPH" in page and ">Kahim<" not in page
 
 
 def test_voting_pages_carry_the_arena_backdrop(client, make_election):

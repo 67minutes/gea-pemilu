@@ -161,7 +161,7 @@ def test_public_results_lock_once_after_close(client, make_election):
     assert client.get(reverse("results")).status_code == 200  # first request after close finalizes
     assert Election.objects.get(pk=e.pk).result_snapshot is not None
     with patch("elections.services.lock_election", side_effect=AssertionError("locked")):
-        assert "Kahim Candidate 1" in client.get(reverse("results")).content.decode()
+        assert "Kahim Candidate 1" not in client.get(reverse("results")).content.decode()
 
 
 def test_finalization_is_stable_and_anonymous(client, make_election):

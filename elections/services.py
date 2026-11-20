@@ -55,6 +55,11 @@ def activate(actor):
         raise ElectionError(_("Configure both offices before activating."))
     if any(office.candidates.count() != 2 for office in election.offices.all()):
         raise ElectionError(_("Each office must have exactly two candidates."))
+    for candidate in Candidate.objects.filter(office__election=election).select_related("office"):
+        try:
+            candidate.full_clean()
+        except ValidationError as exc:
+            raise ElectionError("Invalid candidate configuration: " + "; ".join(exc.messages)) from exc
     if not election.voters.exists():
         raise ElectionError(_("Import the approved voter list first."))
     election.activated_at = database_now()
@@ -201,7 +206,8 @@ def finalize_results():
     counts = dict(Vote.objects.filter(election=election).values("candidate_id").annotate(
         total=Count("id")).values_list("candidate_id", "total"))
     for office in election.offices.prefetch_related("candidates"):
-        candidates = [{"number": c.number, "name": c.name, "votes": counts.get(c.pk, 0)}
+        candidates = [{"number": c.number, "name": c.name, "votes": counts.get(c.pk, 0),
+                       "nim": c.nim, "photo_path": c.photo_path, "is_blank": c.is_blank}
                       for c in office.candidates.all()]
         total = sum(c["votes"] for c in candidates)
         snapshot["offices"].append({"slug": office.slug, "candidates": candidates, "total": total,

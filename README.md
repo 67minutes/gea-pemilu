@@ -1,6 +1,6 @@
 # HMTG “GEA” ITB — Pemilu
 
-Django 5.2 LTS / PostgreSQL backbone for separate Ketua Himpunan (kahim) and senator voting. Indonesian and
+Django 5.2 LTS / PostgreSQL backbone for separate Ketua Umum BPH (internal slug `kahim`) and senator voting. Indonesian and
 English screens, approved CSV voter list, emailed random credentials, MFA-protected committee,
 in-person voting on enrolled committee laptops during admin-defined sessions, a whole ballot
 reviewed and finalized at once, and automatic aggregate results after the last session closes.
@@ -86,7 +86,8 @@ registered authenticator device and enter its code. Recovery codes use the separ
 
 1. In configuration, create the election. On `/committee/`, add its voting sessions (WIB); the
    first session's start and the last session's end become the opening and closing times.
-2. Add `kahim` and `senator`, each with candidates numbered 1 and 2 and profiles in both languages.
+2. Add `kahim` and `senator`, each with two ballot choices numbered 1 and 2 and profiles in both languages.
+   The senator's second choice may be an empty box (`is_blank`); it must have no NIM.
 3. From `/committee/`, preview and confirm the approved UTF-8 CSV. Required `nim,email`; optional
    `display_name`. NIM is an eight-digit string. The allowlist of ITB email domains is configurable;
    verify the actual domains against the approved roster before import.
@@ -103,6 +104,40 @@ registered authenticator device and enter its code. Recovery codes use the separ
    [Kiosk laptops](docs/OPERATIONS.md#kiosk-laptops).
 
 ## Verify and deploy
+
+### Supplied candidate roster and prepared demo accounts
+
+The supplied roster is Rafael Putra Adventus Naibaho (12024017, BPH no. 1), Dzaki Fachri
+Rusadhi (12024001, BPH no. 2), and Juni Martha Octavia (12024071, senator no. 1), with
+Kotak kosong as senator choice 2. Original portraits are stored under `static/img/candidates/`.
+No candidate platform was supplied; the setup retains profiles for matching names and otherwise
+leaves profiles empty, so a replaced candidate's platform is never reassigned to someone else.
+Unavailable-profile placeholders and decorative eyebrow copy are omitted from the interface.
+
+`uv run python manage.py configure_candidates` applies this roster only to an **existing draft**.
+It refuses an absent or activated election and never changes voting sessions or opens voting.
+Do not repurpose a frozen test election or its historical votes for these candidates.
+
+`uv run python manage.py prepare_demo_accounts` prepares 21 inactive synthetic user accounts and
+writes their private credentials to ignored `output/prepared-demo-accounts.json`. These accounts
+have no voter registrations and cannot log in or vote until enrolled and enabled for a later demo.
+It does not create an election, alter the existing roster, or send email. Repeating the command
+refuses to reset existing accounts or overwrite the credential file.
+
+For a later demo, `uv run python manage.py enroll_demo_accounts` enrolls and enables those same
+accounts only in an existing unactivated election whose name starts with `DEMO` or `TEST`.
+It preserves the generated passwords, refuses a real or activated election, and does not open voting.
+The credential file records the accounts' initial preparation status; enrollment is a separate step.
+
+Public results show only each office's unique winner, portrait, and winning vote count, side by side
+on desktop and stacked on phones. Ties and zero-vote results announce no winner. If the empty box
+wins, the page says no senator was elected. Complete totals remain in the immutable snapshot and
+authorized committee exports. Previously finalized snapshots without portrait metadata still render.
+
+The requested 17:00 WIB / 24-hour session is intentionally **not scheduled**: no new election
+is created or opened by these changes.
+
+### Checks
 
 ```powershell
 uv run pytest -q

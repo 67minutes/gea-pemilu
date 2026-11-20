@@ -149,8 +149,19 @@ def results(request):
     election = Election.objects.first()
     snapshot = published_results() if election else None
     labels = dict(Office.Slug.choices)
-    offices = [{**office, "label": labels.get(office["slug"], office["slug"])} for office in snapshot["offices"]] if snapshot else []
-    return render(request, "elections/results.html", {"election": election, "snapshot": snapshot, "offices": offices})
+    offices = []
+    for office in snapshot["offices"] if snapshot else []:
+        highest = max((c["votes"] for c in office["candidates"]), default=0)
+        leaders = [c for c in office["candidates"] if c["votes"] == highest]
+        winner = dict(leaders[0]) if highest > 0 and len(leaders) == 1 else None
+        if winner:
+            winner["display_name"] = _("Empty box") if winner.get("is_blank") else winner["name"]
+        offices.append({"label": labels.get(office["slug"], office["slug"]), "winner": winner,
+                        "no_votes": highest == 0})
+    # Only the public projection reaches the template; full counts stay in the committee snapshot.
+    return render(request, "elections/results.html", {"election": election if snapshot is None else None,
+                                                       "published": snapshot is not None,
+                                                       "offices": offices})
 
 
 @require_GET

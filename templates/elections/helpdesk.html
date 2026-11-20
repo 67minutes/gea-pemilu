@@ -3,7 +3,6 @@
 {% block content %}
 <div class="wrap page">
   <header class="page-head">
-    <p class="eyebrow">HMTG “GEA” ITB</p>
     <h1 class="title">{% translate "Helpdesk" %}</h1>
     <p class="quiet">{% translate "Having trouble logging in or voting? Scan the QR code or contact the committee directly." %}</p>
   </header>
@@ -13,8 +12,7 @@
       <figcaption>{% translate "Scan with your phone camera to reach the helpdesk." %}</figcaption>
     </figure>
     <div>
-      <p class="eyebrow" id="contact-title">{% translate "Contact person" %}</p>
-      <span class="member-name">{{ contact.name }}</span>
+      <span class="member-name" id="contact-title">{{ contact.name }}</span>
       <span class="nim">{% translate "Election committee" %} · {{ contact.role }}</span>
       <a class="phone num" href="tel:+{{ contact.e164 }}">{{ contact.phone }}</a>
       <div class="actions">
