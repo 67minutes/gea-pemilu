@@ -9,10 +9,39 @@ from django.test import Client
 from django.urls import reverse
 from django_otp.plugins.otp_static.models import StaticDevice
 
-from elections.models import Election, EmailDelivery, User, Vote, Voter
+from elections.models import Candidate, Election, EmailDelivery, User, Vote, Voter
 from elections.services import issue_credentials, submit_ballot
 
 pytestmark = pytest.mark.django_db
+
+
+def test_repair_preserves_schedule_and_rejects_stale_ballots(make_election):
+    from elections.services import ElectionError
+
+    election, _, candidates, voters = make_election(name="TEST old roster")
+    before = Election.objects.values().get()
+    old_choices = {slug: candidates[slug][0].pk for slug in candidates}
+    call_command("repair_empty_test_candidates")
+    assert Election.objects.values().get() == before
+    assert Candidate.objects.filter(nim="12024071", office__slug="senator").exists()
+    with pytest.raises(ElectionError):
+        submit_ballot(voters[0].user, old_choices, uuid.uuid4())
+    assert not Vote.objects.exists()
+
+
+def test_repair_refuses_any_recorded_vote(make_election):
+    _, _, candidates, voters = make_election(name="TEST with votes")
+    submit_ballot(voters[0].user, {slug: candidates[slug][0].pk for slug in candidates}, uuid.uuid4())
+    before = list(Candidate.objects.values())
+    with pytest.raises(CommandError):
+        call_command("repair_empty_test_candidates")
+    assert list(Candidate.objects.values()) == before
+
+
+def test_repair_refuses_real_election(make_election):
+    make_election()
+    with pytest.raises(CommandError):
+        call_command("repair_empty_test_candidates")
 
 
 def setup(*args):
@@ -32,7 +61,15 @@ def test_setup_creates_open_test_election_with_voters_and_committee(settings):
     nim, password = voters[0]
     voter = Client()
     assert voter.post(reverse("login"), {"username": nim, "password": password}).url == reverse("dashboard")
-    assert voter.get(reverse("ballot")).status_code == 200
+    for url in [reverse("home"), reverse("ballot")]:
+        response = voter.get(url)
+        assert response.status_code == 200
+        page = response.content.decode()
+        for nim in ["12024017", "12024001", "12024071"]:
+            assert f"img/candidates/{nim}.jpeg" in page
+        assert "Juni Martha Octavia" in page and "Kotak kosong" in page
+        assert "Calon Uji" not in page
+    assert Candidate.objects.filter(is_blank=True, office__slug="senator").count() == 1
 
 
 def test_committee_test_login_works_with_a_printed_recovery_code():

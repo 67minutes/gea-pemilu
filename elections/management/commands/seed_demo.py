@@ -4,11 +4,12 @@ from datetime import timedelta
 from pathlib import Path
 
 from django.conf import settings
+from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
 
-from elections.models import Candidate, Election, Office, User, Voter, VotingWindow
+from elections.models import Election, User, Voter, VotingWindow
 from elections.services import sync_envelope
 
 
@@ -32,11 +33,7 @@ class Command(BaseCommand):
         election = Election.objects.create(name="DEMO — GEA ITB")
         VotingWindow.objects.create(election=election, starts_at=start, ends_at=start + timedelta(hours=72))
         sync_envelope(election)
-        for slug in ["kahim", "senator"]:
-            office = Office.objects.create(election=election, slug=slug)
-            for n in [1, 2]:
-                Candidate.objects.create(office=office, number=n, name=f"Calon {office} {n}",
-                    profile_id="", profile_en="")
+        call_command("configure_candidates", stdout=self.stdout)
         credentials = []
         for index in range(options["voters"]):
             nim = str(99000000 + index)

@@ -2,13 +2,14 @@ import secrets
 from datetime import timedelta
 
 from django.contrib.auth.models import Permission
+from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
 from django_otp.plugins.otp_static.models import StaticDevice, StaticToken
 from django_otp.plugins.otp_totp.models import TOTPDevice
 
-from elections.models import Candidate, Election, Office, User, Voter, VotingWindow
+from elections.models import Election, User, Voter, VotingWindow
 from elections.services import audit, sync_envelope
 
 from .create_committee import COMMITTEE_PERMISSIONS
@@ -36,11 +37,7 @@ class Command(BaseCommand):
         VotingWindow.objects.create(election=election, starts_at=now - timedelta(minutes=1),
                                     ends_at=now + timedelta(hours=options["hours"]))
         sync_envelope(election)
-        for slug in ["kahim", "senator"]:
-            office = Office.objects.create(election=election, slug=slug)
-            for n in [1, 2]:
-                Candidate.objects.create(office=office, number=n, name=f"Calon Uji {office} {n}",
-                    profile_id="Profil calon uji coba.", profile_en="Test candidate profile.")
+        call_command("configure_candidates", stdout=self.stdout)
 
         self.stdout.write("Voters" + (" (credentials will be emailed)" if options["email"] else "") + ":")
         local, _, domain = (options["email"] or "").lower().partition("@")
